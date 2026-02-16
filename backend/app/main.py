@@ -12,11 +12,9 @@ SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-
 @app.get("/health")
 def health_check():
     return {"status": "ok"}
-
 
 @app.post("/subscribe")
 def subscribe(email: str, location: str):
@@ -24,14 +22,11 @@ def subscribe(email: str, location: str):
         "email": email,
         "location": location
     }
-
     response = supabase.table("subscribers").insert(data).execute()
-
     return {
         "message": "Subscription successful",
         "data": response.data
     }
-
 
 @app.get("/risk")
 def get_risk(location: str):
