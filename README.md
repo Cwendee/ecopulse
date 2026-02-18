@@ -12,25 +12,25 @@ By simplifying risk information and enabling early alert subscriptions, Ecopulse
 
 Flooding remains one of the most frequent and destructive climate related hazards across many African regions. Although climate and weather data exists, communities often receive information that is:
 
-Late
+* Late
 
-Too technical
+* Too technical
 
-Not location specific
+* Not location specific
 
-Not actionable
+* Not actionable
 
 This results in avoidable consequences such as:
 
-Property damage
+* Property damage
 
-Business interruption
+* Business interruption
 
-Income loss
+* Income loss
 
-Displacement
+* Displacement
 
-Increased safety risks
+* Increased safety risks
 
 Ecopulse bridges the gap between climate data availability and practical, community level action.
 
@@ -39,13 +39,13 @@ Ecopulse bridges the gap between climate data availability and practical, commun
 
 Ecopulse provides:
 
-Location based flood risk summaries
+* Location based flood risk summaries
 
-Plain language explanations of risk levels
+* Plain language explanations of risk levels
 
-Email subscription for early flood alerts
+* Email subscription for early flood alerts
 
-A scalable backend API for risk processing
+* A scalable backend API for risk processing
 
 The focus of this MVP is to make flood preparedness accessible, understandable, and actionable.
 
@@ -56,18 +56,17 @@ SDG 13: Climate Action
 
 Ecopulse contributes by:
 
-Enhancing adaptive capacity to climate related hazards
+* Enhancing adaptive capacity to climate related hazards
 
-Supporting early preparedness and awareness
+* Supporting early preparedness and awareness
 
-Encouraging informed decision making before disasters occur
+* Encouraging informed decision making before disasters occur
 
 
 ## Technical Architecture
 
 ```mermaid
 graph TD
-    graph TD
     User[User Browser] --> Frontend[Frontend React + Vite<br>Hosted on Vercel]
     Frontend --> Backend[Backend FastAPI<br>Hosted on Render]
     Backend --> Database[Supabase PostgreSQL]
@@ -86,7 +85,7 @@ https://ecopulse-ndki.onrender.com/docs
 
 # GET /health
 
-Checks whether the backend service is running.
+- Checks whether the backend service is running.
 
 Example response:
 
@@ -96,7 +95,7 @@ Example response:
 
 # GET /risk?location=CityName
 
-Returns a flood risk summary for a specified location.
+- Returns a flood risk summary for a specified location.
 
 Example:
 
@@ -112,13 +111,13 @@ Example response:
 
 # POST /subscribe
 
-Registers a user email and location for early flood alerts.
+- Registers a user email and location for early flood alerts.
 
 Parameters:
 
-email
+* email
 
-location
+* location
 
 Example response:
 
@@ -133,15 +132,15 @@ Table: subscribers
 
 Fields:
 
-id (UUID, primary key)
+- id (UUID, primary key)
 
-email (unique, not null)
+- email (unique, not null)
 
-location (text)
+- location (text)
 
-created_at (timestamp)
+- created_at (timestamp)
 
-alert_enabled (boolean)
+- alert_enabled (boolean)
 
 
 ## Local Development (Backend)
@@ -175,17 +174,17 @@ http://127.0.0.1:8000/docs
 
 ## Project Status
 
-Backend API deployed and operational
+* Backend API deployed and operational
 
-Supabase database integration complete
+* Supabase database integration complete
 
-CORS enabled for frontend integration
+* CORS enabled for frontend integration
 
-Frontend integration in progress
+* Frontend integration in progress
 
-Email automation pending
+* Email automation pending
 
-Real time flood data integration pending
+* Real time flood data integration pending
 
 
 
