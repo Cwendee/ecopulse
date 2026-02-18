@@ -89,9 +89,11 @@ https://ecopulse-ndki.onrender.com/docs
 
 Example response:
 
+```bash
 {
   "status": "ok"
 }
+```
 
 # GET /risk?location=CityName
 
@@ -103,11 +105,13 @@ Example:
 
 Example response:
 
+```bash
 {
   "location": "Lagos",
   "risk_level": "Moderate",
   "message": "Flood risk in Lagos is moderate."
 }
+```
 
 # POST /subscribe
 
@@ -121,10 +125,12 @@ Parameters:
 
 Example response:
 
+```bash
 {
   "message": "Subscription successful",
   "data": [...]
 }
+```
 
 # Database Schema
 
@@ -151,21 +157,29 @@ Fields:
 
 3. Create and activate virtual environment
 
+```bash
 python3 -m venv venv
 source venv/bin/activate
+```
 
 4. Install dependencies
 
+```bash
 pip install -r requirements.txt
+```
 
 5. Create a .env file with:
 
+```bash
 SUPABASE_URL=your_project_url
 SUPABASE_KEY=your_service_role_key
+```
 
 6. Run the server
 
+```bash
 uvicorn app.main:app --reload
+```
 
 7. Open
 
