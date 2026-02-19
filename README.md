@@ -115,22 +115,74 @@ Example response:
 
 # POST /subscribe
 
-- Registers a user email and location for early flood alerts.
+- Registers a user for flood alert notifications and saves their alert and delivery preferences.
 
-Parameters:
+Request Body:
 
-* email
+```bash
+{
+  "email": "example@gmail.com",
+  "country": "Nigeria",
+  "region": "Lagos",
+  "severe_alerts": true,
+  "early_alerts": true,
+  "preparedness_reminders": false,
+  "email_delivery": true,
+  "in_app_delivery": false,
+  "browser_delivery": false
+}
+```
 
-* location
+# Fields:
+
+* email (required) – Unique identifier for the subscriber
+
+* country (required) – User's selected country
+
+* region (required) – User's selected region
+
+* severe_alerts – Receive severe flood warnings
+
+* early_alerts – Receive rainfall and river level risk alerts
+
+* preparedness_reminders – Receive preparedness reminders
+
+* email_delivery – Receive alerts via email
+
+* in_app_delivery – Receive alerts inside the web application
+
+* browser_delivery – Receive browser notifications
 
 Example response:
 
 ```bash
 {
-  "message": "Subscription successful",
+  "message": "Subscription saved successfully",
   "data": [...]
 }
+
 ```
+
+# DELETE /unsubscribe
+
+- Disables alert notifications for a subscribed email.
+
+Request Body:
+
+```bash
+{
+  "email": "example@gmail.com"
+}
+```
+
+Example response:
+
+```bash
+{
+  "message": "You have successfully unsubscribed"
+}
+```
+
 
 # Database Schema
 
@@ -191,6 +243,8 @@ http://127.0.0.1:8000/docs
 * Backend API deployed and operational
 
 * Supabase database integration complete
+
+* Subscription system with alert and delivery preferences implemented
 
 * CORS enabled for frontend integration
 
