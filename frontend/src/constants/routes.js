@@ -4,7 +4,10 @@ const routes = {
     resources: () => "/resources",
     about: () => "/about",
     contact: () => "/contact",
-    faq: () => "/faq"
+    faq: () => "/faq",
+    support: () => "/community-page",
+    emergency: () => "/emergency-prep",
+    localResources: () => "/local-resources"
   },
 };
 

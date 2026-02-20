@@ -15,6 +15,17 @@
     background-color: var(--color-bg);
     color: var(--color-primary);
   }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6,
+  p {
+    margin: 0;
+  }
+
   .typo-base {
     @apply text-base font-medium;
   }
@@ -33,6 +44,10 @@
 
   .typo-3xl {
     @apply text-[30px] lg:text-[40px] font-medium;
+  }
+
+  .typo-4xl {
+    @apply text-[27px] lg:text-[40px] xl:text-[64px] font-medium;
   }
 }
 
