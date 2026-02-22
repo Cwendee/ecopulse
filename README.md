@@ -2,15 +2,15 @@
 
 ## Overview
 
-Ecopulse is a web based flood risk awareness and early warning platform designed for flood prone communities across Africa.
+Ecopulse is a web-based flood risk awareness and early warning platform designed for flood-prone communities across Africa.
 
-The platform translates complex climate and flood related data into simple, location specific guidance that residents and small and medium sized enterprises can use to prepare ahead of time.
+The platform translates rainfall and climate data into simple, location-specific preparedness guidance that residents and small and medium-sized enterprises (SMEs) can use to take proactive action.
 
-By simplifying risk information and enabling early alert subscriptions, Ecopulse promotes proactive disaster preparedness rather than reactive response.
+Rather than predicting floods in real time, Ecopulse converts existing rainfall indicators into understandable regional risk levels that support early awareness and preparedness.
 
 ## Problem Context
 
-Flooding remains one of the most frequent and destructive climate related hazards across many African regions. Although climate and weather data exists, communities often receive information that is:
+Flooding remains one of the most frequent and destructive climate-related hazards across many African regions. Although rainfall and climate datasets exist, communities often receive information that is:
 
 * Late
 
@@ -39,15 +39,71 @@ Ecopulse bridges the gap between climate data availability and practical, commun
 
 Ecopulse provides:
 
-* Location based flood risk summaries
+* Location-based flood risk summaries at the ADM2 (regional) level
 
-* Plain language explanations of risk levels
+* Deterministic rainfall-based flood risk classification
+
+* Plain-language explanations via the ECO assistant
 
 * Email subscription for early flood alerts
 
-* A scalable backend API for risk processing
+* A scalable backend API for risk processing and integration
 
-The focus of this MVP is to make flood preparedness accessible, understandable, and actionable.
+The MVP focuses on accessibility, transparency, and explainability — not complex predictive modeling.
+
+
+## 🌧 Deterministic Risk Engine (MVP Design)
+
+Ecopulse uses a rainfall-based flood risk proxy powered by CHIRPS Daily rainfall data from Digital Earth Africa.
+
+For the MVP:
+
+* Risk Score = Recent Rainfall / Historical Mean Rainfall
+
+* Risk classification is rule-based (no machine learning)
+
+* Same input always produces the same output (deterministic logic)
+
+
+Risk categories:
+
+* Low
+
+* Moderate
+
+* High
+
+* Unknown (if rainfall data is missing)
+
+
+This approach ensures:
+
+* Transparency
+
+* Reproducibility
+
+* Fast execution
+
+* Clear interpretability
+
+
+## 📊 Data Sources
+
+* CHIRPS Daily Rainfall Dataset (Digital Earth Africa STAC API)
+
+* geoBoundaries ADM2 Administrative Boundaries (Africa subset)
+
+Ecopulse does not generate new climate predictions. It translates publicly available rainfall indicators into structured preparedness insights.
+
+
+## ⚠ Disclaimer
+
+Ecopulse does not predict floods in real time and does not coordinate emergency response.
+
+The platform translates rainfall-based indicators into simplified regional preparedness guidance.
+
+Risk levels are rainfall-based proxies and should not be interpreted as official emergency warnings.
+
 
 
 ## SDG Alignment
@@ -60,18 +116,83 @@ Ecopulse contributes by:
 
 * Supporting early preparedness and awareness
 
-* Encouraging informed decision making before disasters occur
+* Encouraging informed decision-making before disasters occur
 
 
-## Technical Architecture
+## 🏗 Architecture Overview 
+
+Ecopulse is structured into three main layers:
+
+- **Frontend Layer** – User interface for location search, map visualization, alerts, and ECO assistant.
+- **Backend API Layer** – FastAPI service responsible for location resolution, risk lookup, and AI explanations.
+- **Data Intelligence Layer** – Deterministic rainfall-based flood risk engine powered by CHIRPS data.
+
+The diagram below illustrates how these components interact:
 
 ```mermaid
-graph TD
-    User[User Browser] --> Frontend[Frontend React + Vite<br>Hosted on Vercel]
-    Frontend --> Backend[Backend FastAPI<br>Hosted on Render]
-    Backend --> Database[Supabase PostgreSQL]
-    Backend --> Email[Email Alert Service<br>Future Integration]
+flowchart TD 
+
+    %% ======================
+    %% User Layer
+    %% ======================
+    User[User]
+    FE[Frontend Web App]
+
+    User --> FE
+
+    %% ======================
+    %% Backend Layer
+    %% ======================
+    FE -->|POST /location/resolve| BE[FastAPI Backend]
+    FE -->|GET /risk| BE
+    FE -->|POST /eco/chat| BE
+
+    %% ======================
+    %% Backend Internal Modules
+    %% ======================
+    BE --> LOC[Location Resolver<br/>locations.py + location_resolver.py]
+    BE --> RISKLOOKUP[Risk Lookup<br/>Supabase]
+    BE --> ECO[Eco Assistant<br/>eco_assistant.py]
+
+    %% ======================
+    %% Data Storage
+    %% ======================
+    DB[(Supabase<br/>risk_adm2_daily + subscribers)]
+
+    RISKLOOKUP --> DB
+    BE --> DB
+
+    %% ======================
+    %% AI Component
+    %% ======================
+    ECO --> GPT[GPT-OSS API]
+
+    %% ======================
+    %% Data Intelligence Layer
+    %% ======================
+    STAC[CHIRPS STAC API<br/>Digital Earth Africa]
+    PIPE[Daily Risk Pipeline<br/>run_daily_risk_pipeline_stac]
+
+    STAC --> PIPE
+    PIPE -->|risk_adm2.parquet| DB
+
+    %% ======================
+    %% Automation
+    %% ======================
+    SCHED[Scheduled Job<br/>(GitHub Action / Cron)]
+    SCHED --> PIPE
 ```
+
+### 🔄 End-to-End Flow
+
+1. The user interacts with the frontend (searching a location or asking ECO a question).
+2. The frontend calls the backend API:
+   - `/location/resolve` → maps user input to a stable `region_id`.
+   - `/risk` → retrieves the latest daily risk metrics.
+   - `/eco/chat` → generates a contextual preparedness explanation.
+3. The backend retrieves precomputed risk data from Supabase.
+4. The ECO assistant calls GPT-OSS to convert deterministic risk metrics into natural language guidance.
+5. A scheduled daily pipeline processes CHIRPS rainfall data and updates regional risk records.
 
 
 ## Live Backend URL
@@ -113,92 +234,122 @@ Example response:
 }
 ```
 
-# POST /subscribe
+# POST /location/resolve
 
-- Registers a user for flood alert notifications and saves their alert and delivery preferences.
+Maps user input to a stable ADM2 region_id.
 
 Request Body:
 
 ```bash
 {
-  "email": "example@gmail.com",
   "country": "Nigeria",
-  "region": "Lagos",
-  "severe_alerts": true,
-  "early_alerts": true,
-  "preparedness_reminders": false,
-  "email_delivery": true,
-  "in_app_delivery": false,
-  "browser_delivery": false
+  "user_location": "Ikeja"
 }
 ```
 
-# Fields:
+Response:
 
-* email (required) – Unique identifier for the subscriber
+```bash
+{
+  "region_id": "NG-LA-IKJ",
+  "region_name": "Ikeja",
+  "country": "Nigeria"
+}
+```
 
-* country (required) – User's selected country
 
-* region (required) – User's selected region
+GET /risk?region_id=NG-LA-IKJ
 
-* severe_alerts – Receive severe flood warnings
-
-* early_alerts – Receive rainfall and river level risk alerts
-
-* preparedness_reminders – Receive preparedness reminders
-
-* email_delivery – Receive alerts via email
-
-* in_app_delivery – Receive alerts inside the web application
-
-* browser_delivery – Receive browser notifications
+Returns the latest deterministic rainfall-based risk record for a region.
 
 Example response:
 
 ```bash
 {
-  "message": "Subscription saved successfully",
-  "data": [...]
+  "region_id": "NG-LA-IKJ",
+  "country": "Nigeria",
+  "adm2_name": "Ikeja",
+  "valid_at": "2026-02-12",
+  "rainfall_index": 0.78,
+  "anomaly": 1.2,
+  "rainfall_percentile": 85,
+  "risk_level": "Moderate",
+  "data_quality": "ok"
 }
-
 ```
 
-# DELETE /unsubscribe
+POST /eco/chat
 
-- Disables alert notifications for a subscribed email.
+Generates a contextual preparedness explanation.
 
 Request Body:
 
 ```bash
 {
-  "email": "example@gmail.com"
+  "region_id": "NG-LA-IKJ",
+  "message": "Should I be worried about flooding today?"
 }
 ```
 
-Example response:
+POST /subscribe
 
-```bash
-{
-  "message": "You have successfully unsubscribed"
-}
-```
+Registers a user for flood alert notifications.
+
+DELETE /unsubscribe
+
+Disables alert notifications for a subscribed email.
+
+## Database Schema
+
+# Table: risk_adm2_daily
+
+* region_id (primary key)
+
+* country
+
+* adm2_name
+
+* valid_at
+
+* rainfall_index
+
+* anomaly
+
+* rainfall_percentile
+
+* risk_level
+
+* data_quality
 
 
-# Database Schema
+# Table: subscribers
 
-Table: subscribers
+* id (UUID)
 
-Fields:
+* email (unique)
 
-- id (UUID, primary key)
+* country
 
-- email (unique, not null)
+* region
 
-- location (text)
+* region_id
 
-- created_at (timestamp)
+* alert_enabled
 
-- alert_enabled (boolean)
+* severe_alerts
+
+* early_alerts
+
+* preparedness_reminders
+
+* email_delivery
+
+* in_app_delivery
+
+* browser_delivery
+
+* created_at
+
 
 
 ## Local Development (Backend)
@@ -223,8 +374,13 @@ pip install -r requirements.txt
 5. Create a .env file with:
 
 ```bash
+
 SUPABASE_URL=your_project_url
-SUPABASE_KEY=your_service_role_key
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+GPT_OSS_BASE_URL=your_llm_gateway_url
+GPT_OSS_API_KEY=your_api_key
+GPT_OSS_MODEL=gpt-oss-120gb
+
 ```
 
 6. Run the server
@@ -242,17 +398,17 @@ http://127.0.0.1:8000/docs
 
 * Backend API deployed and operational
 
-* Supabase database integration complete
+* Supabase integration complete
 
-* Subscription system with alert and delivery preferences implemented
+* Deterministic rainfall-based risk engine integrated
 
-* CORS enabled for frontend integration
+* Location resolution via ADM2 mapping
 
-* Frontend integration in progress
+* ECO assistant integration in progress
 
-* Email automation pending
+* Daily automated risk pipeline pending final integration
 
-* Real time flood data integration pending
+
 
 
 
