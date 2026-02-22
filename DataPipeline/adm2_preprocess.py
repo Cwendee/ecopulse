@@ -63,13 +63,18 @@ AFRICA_ISO3: List[str] = [
 
 
 def filter_global_adm2_to_africa(global_path: str, output_path: str) -> None:
-    src = Path("/data/raw/adm2/geoBoundariesCGAZ_ADM2.geojson")
-    dst = Path("/data/processed")
+    src = Path(global_path)
+    dst = Path(output_path)
+
     gdf = gpd.read_file(src)
+
     if "shapeGroup" not in gdf.columns:
         raise ValueError("Expected 'shapeGroup' column with ISO3 codes")
+
     mask = gdf["shapeGroup"].astype(str).isin(AFRICA_ISO3)
     subset = gdf.loc[mask].copy()
+
+    dst.parent.mkdir(parents=True, exist_ok=True)
     subset.to_file(dst, driver="GeoJSON")
 
 
