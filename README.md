@@ -130,56 +130,34 @@ Ecopulse is structured into three main layers:
 The diagram below illustrates how these components interact:
 
 ```mermaid
-flowchart TD 
+flowchart TD
 
-    %% ======================
-    %% User Layer
-    %% ======================
     User[User]
     FE[Frontend Web App]
 
     User --> FE
 
-    %% ======================
-    %% Backend Layer
-    %% ======================
     FE -->|POST /location/resolve| BE[FastAPI Backend]
     FE -->|GET /risk| BE
     FE -->|POST /eco/chat| BE
 
-    %% ======================
-    %% Backend Internal Modules
-    %% ======================
-    BE --> LOC[Location Resolver<br/>locations.py + location_resolver.py]
-    BE --> RISKLOOKUP[Risk Lookup<br/>Supabase]
-    BE --> ECO[Eco Assistant<br/>eco_assistant.py]
+    BE --> LOC[Location Resolver]
+    BE --> RISKLOOKUP[Risk Lookup - Supabase]
+    BE --> ECO[Eco Assistant]
 
-    %% ======================
-    %% Data Storage
-    %% ======================
-    DB[(Supabase<br/>risk_adm2_daily + subscribers)]
-
+    DB[(Supabase Database)]
     RISKLOOKUP --> DB
     BE --> DB
 
-    %% ======================
-    %% AI Component
-    %% ======================
     ECO --> GPT[GPT-OSS API]
 
-    %% ======================
-    %% Data Intelligence Layer
-    %% ======================
-    STAC[CHIRPS STAC API<br/>Digital Earth Africa]
-    PIPE[Daily Risk Pipeline<br/>run_daily_risk_pipeline_stac]
+    STAC[CHIRPS STAC API]
+    PIPE[Daily Risk Pipeline]
 
     STAC --> PIPE
-    PIPE -->|risk_adm2.parquet| DB
+    PIPE --> DB
 
-    %% ======================
-    %% Automation
-    %% ======================
-    SCHED[Scheduled Job<br/>(GitHub Action / Cron)]
+    SCHED[Scheduled Job - GitHub Action or Cron]
     SCHED --> PIPE
 ```
 
