@@ -97,7 +97,7 @@ def unsubscribe(data: UnsubscribeRequest):
         raise HTTPException(status_code=404, detail="Email not found")
 
     return {"message": "You have successfully unsubscribed"}
-=======
+
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, EmailStr
