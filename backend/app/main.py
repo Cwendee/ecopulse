@@ -98,6 +98,9 @@ def health_check():
 @app.post("/subscribe")
 def subscribe(data: SubscriptionRequest):
 
+    if supabase is None:
+        raise HTTPException(status_code=500, detail="Database unavailable")
+
     subscription_data = {
         "email": data.email,
         "country": data.country,
@@ -126,6 +129,9 @@ def subscribe(data: SubscriptionRequest):
 
 @app.delete("/unsubscribe")
 def unsubscribe(data: UnsubscribeRequest):
+
+    if supabase is None:
+        raise HTTPException(status_code=500, detail="Database unavailable")
 
     response = (
         supabase.table("subscribers")
