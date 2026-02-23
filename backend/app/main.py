@@ -7,7 +7,7 @@ import pandas as pd
 
 from app.routes import location, risk, chat
 from app.services.supabase_client import supabase
-from DataPipeline.gpt_oss_client import generate
+from app.services.gpt_oss_client import generate
 
 load_dotenv()
 
