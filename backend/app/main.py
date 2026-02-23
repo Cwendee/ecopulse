@@ -4,7 +4,6 @@ from pydantic import BaseModel, EmailStr
 from dotenv import load_dotenv
 from pathlib import Path
 import pandas as pd
-import os
 
 from app.routes import location, risk, chat
 from app.services.supabase_client import supabase
@@ -35,18 +34,16 @@ app.add_middleware(
 )
 
 # ============================
-# File Paths
+# Load Risk Dataset
 # ============================
 
 BASE_DIR = Path(__file__).resolve().parents[2]
 RISK_FILE = BASE_DIR / "DataPipeline" / "data" / "processed" / "risk_africa.parquet"
 
-# Load risk data once at startup
 risk_df = pd.read_parquet(RISK_FILE)
 
-
 # ============================
-# Utility Functions
+# Utility Function
 # ============================
 
 def build_prompt(row):
@@ -54,6 +51,8 @@ def build_prompt(row):
 You are an expert climate risk analyst.
 
 Region ID: {row['region_id']}
+Region Name: {row.get('shapeName', 'Unknown')}
+Country: {row.get('shapeGroup', 'Unknown')}
 
 Recent rainfall mean: {row['rainfall_mean_recent']:.2f} mm
 Baseline rainfall mean: {row['rainfall_mean_normal']:.2f} mm
@@ -63,7 +62,6 @@ Risk level: {row['risk_level']}
 Explain this risk clearly in simple language and give one practical recommendation
 for communities or local authorities. Keep it under 120 words.
 """
-
 
 # ============================
 # Pydantic Models
@@ -85,15 +83,13 @@ class SubscriptionRequest(BaseModel):
 class UnsubscribeRequest(BaseModel):
     email: EmailStr
 
-
 # ============================
-# Health Endpoint
+# Health
 # ============================
 
 @app.get("/health")
 def health_check():
     return {"status": "ok"}
-
 
 # ============================
 # Subscription Endpoints
@@ -143,9 +139,82 @@ def unsubscribe(data: UnsubscribeRequest):
 
     return {"message": "You have successfully unsubscribed"}
 
+# ============================
+# Countries Endpoint
+# ============================
+
+@app.get("/countries")
+def get_countries():
+
+    if "shapeGroup" not in risk_df.columns:
+        raise HTTPException(status_code=500, detail="Country column not found")
+
+    countries = (
+        risk_df["shapeGroup"]
+        .dropna()
+        .unique()
+        .tolist()
+    )
+
+    countries.sort()
+
+    return {"countries": countries}
 
 # ============================
-# Risk Explanation Endpoint
+# Regions by Country
+# ============================
+
+@app.get("/countries/{country}/regions")
+def get_regions(country: str):
+
+    if "shapeGroup" not in risk_df.columns:
+        raise HTTPException(status_code=500, detail="Country column not found")
+
+    filtered = risk_df[
+        risk_df["shapeGroup"].str.lower() == country.lower()
+    ]
+
+    if filtered.empty:
+        raise HTTPException(status_code=404, detail="Country not found")
+
+    regions = (
+        filtered[["region_id", "shapeName"]]
+        .dropna()
+        .drop_duplicates()
+    )
+
+    return {
+        "country": country,
+        "regions": regions.to_dict(orient="records"),
+    }
+
+# ============================
+# Risk Data Endpoint
+# ============================
+
+@app.get("/risk/{region_id}")
+def get_risk(region_id: str):
+
+    row = risk_df[risk_df["region_id"] == region_id]
+
+    if row.empty:
+        raise HTTPException(status_code=404, detail="Region not found")
+
+    row_data = row.iloc[0]
+
+    return {
+        "region_id": row_data["region_id"],
+        "region_name": row_data.get("shapeName"),
+        "country": row_data.get("shapeGroup"),
+        "risk_level": row_data["risk_level"],
+        "rainfall_mean_recent": row_data["rainfall_mean_recent"],
+        "rainfall_mean_normal": row_data["rainfall_mean_normal"],
+        "anomaly": row_data["anomaly"],
+        "valid_at": row_data["valid_at"],
+    }
+
+# ============================
+# AI Risk Explanation
 # ============================
 
 @app.get("/risk/{region_id}/explain")
@@ -165,44 +234,4 @@ def explain_risk(region_id: str):
         "region_id": region_id,
         "risk_level": row_data["risk_level"],
         "explanation": explanation,
-    }
-
-
-# ============================
-# Countries Endpoint (For Frontend Dropdown)
-# ============================
-
-@app.get("/countries")
-def get_countries():
-
-    if "shapeGroup" not in risk_df.columns:
-        raise HTTPException(status_code=500, detail="Country column not found")
-
-    countries = sorted(risk_df["shapeGroup"].dropna().unique().tolist())
-
-    return {"countries": countries}
-
-
-# ============================
-# Regions by Country Endpoint
-# ============================
-
-@app.get("/countries/{country}/regions")
-def get_regions(country: str):
-
-    if "shapeGroup" not in risk_df.columns:
-        raise HTTPException(status_code=500, detail="Country column not found")
-
-    filtered = risk_df[
-        risk_df["shapeGroup"].str.lower() == country.lower()
-    ]
-
-    if filtered.empty:
-        raise HTTPException(status_code=404, detail="Country not found")
-
-    regions = filtered["region_id"].tolist()
-
-    return {
-        "country": country,
-        "regions": regions,
     }
