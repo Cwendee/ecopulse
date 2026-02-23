@@ -100,3 +100,18 @@ export const emergData = {
     },
   ],
 };
+
+export const headerNavigation = [
+  {
+    title: "Home",
+  },
+  {
+    title: "Map",
+  },
+  {
+    title: "Resource",
+  },
+  {
+    title: "About Us",
+  },
+];
