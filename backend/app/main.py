@@ -51,6 +51,8 @@ def build_prompt(row):
 You are an expert climate risk analyst.
 
 Region ID: {row['region_id']}
+Region Name: {row.get('region_name', 'Unknown')}
+Country Code: {row.get('country_code', 'Unknown')}
 
 Recent rainfall mean: {row['rainfall_mean_recent']:.2f} mm
 Baseline rainfall mean: {row['rainfall_mean_normal']:.2f} mm
@@ -90,22 +92,44 @@ def health_check():
     return {"status": "ok"}
 
 # ============================
-# Regions Endpoint (Replaces Countries Logic)
+# Countries Endpoint
 # ============================
 
-@app.get("/regions")
-def get_regions():
-
-    regions = (
-        risk_df["region_id"]
+@app.get("/countries")
+def get_countries():
+    countries = (
+        risk_df["country_code"]
         .dropna()
         .unique()
         .tolist()
     )
+    countries.sort()
+    return {"countries": countries}
 
-    regions.sort()
+# ============================
+# Regions by Country Code
+# ============================
 
-    return {"regions": regions}
+@app.get("/countries/{country_code}/regions")
+def get_regions(country_code: str):
+
+    filtered = risk_df[
+        risk_df["country_code"].str.upper() == country_code.upper()
+    ]
+
+    if filtered.empty:
+        raise HTTPException(status_code=404, detail="Country not found")
+
+    regions = (
+        filtered[["region_id", "region_name"]]
+        .drop_duplicates()
+        .to_dict(orient="records")
+    )
+
+    return {
+        "country_code": country_code.upper(),
+        "regions": regions,
+    }
 
 # ============================
 # Risk Data Endpoint
@@ -123,6 +147,8 @@ def get_risk(region_id: str):
 
     return {
         "region_id": row_data["region_id"],
+        "region_name": row_data.get("region_name"),
+        "country_code": row_data.get("country_code"),
         "risk_level": row_data["risk_level"],
         "rainfall_mean_recent": row_data["rainfall_mean_recent"],
         "rainfall_mean_normal": row_data["rainfall_mean_normal"],
@@ -146,7 +172,6 @@ def explain_risk(region_id: str):
 
     row_data = row.iloc[0]
     prompt = build_prompt(row_data)
-
     explanation = generate(prompt)
 
     return {

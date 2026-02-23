@@ -53,19 +53,16 @@ def run_daily_risk_pipeline(
     recent_days: int = 7,
     normal_days: int = 60,
     valid_date: Optional[str] = None,
-    output_path: str = "DataPipeline/data/processed/risk_adm2.parquet",
+    output_path: str = "DataPipeline/data/processed/risk_africa.parquet",
 ) -> pd.DataFrame:
 
-    # 🔁 Load ADM2 filtered to Africa
     adm2 = load_adm2_boundaries(adm2_path, region_scope="africa")
 
-    # 🔁 Get rainfall file paths
     all_paths = list_geotiff_files(rainfall_glob)
     recent_paths, normal_paths, today = _split_recent_normal(
         all_paths, recent_days, normal_days, valid_date
     )
 
-    # 🔁 Load full period as xarray
     da = load_chirps_period(recent_paths + normal_paths)
     da = da.sortby("time")
 
@@ -80,10 +77,15 @@ def run_daily_risk_pipeline(
         )
     )
 
+    if recent_da.time.size == 0:
+        raise ValueError("No recent rainfall data found")
+
+    if normal_da.time.size == 0:
+        raise ValueError("No baseline rainfall data found")
+
     recent_mean = recent_da.mean(dim="time", skipna=True)
     normal_mean = normal_da.mean(dim="time", skipna=True)
 
-    # 🔁 Aggregate rainfall to ADM2
     recent_df = aggregate_xarray_period_mean(
         recent_mean, adm2, "rainfall_mean_recent"
     )
@@ -91,9 +93,23 @@ def run_daily_risk_pipeline(
         normal_mean, adm2, "rainfall_mean_normal"
     )
 
-    # 🔁 Build features + classify risk
     feats = build_rainfall_features(recent_df, normal_df)
     result = classify_risk(feats, valid_at=today.isoformat())
+
+    # 🔥 Merge ADM2 metadata
+    metadata = adm2[
+        ["region_id", "NAME_0", "NAME_2", "shapeGroup"]
+    ].drop_duplicates()
+
+    result = result.merge(metadata, on="region_id", how="left")
+
+    result = result.rename(
+        columns={
+            "NAME_0": "country",
+            "NAME_2": "region_name",
+            "shapeGroup": "country_code",
+        }
+    )
 
     result.to_parquet(output_path, index=False)
 
@@ -106,7 +122,7 @@ def run_daily_risk_pipeline_stac(
     recent_days: int = 7,
     normal_days: int = 60,
     valid_date: Optional[str] = None,
-    output_path: str = "DataPipeline/data/processed/risk_adm2.parquet",
+    output_path: str = "DataPipeline/data/processed/risk_africa.parquet",
 ) -> pd.DataFrame:
 
     adm2 = load_adm2_boundaries(adm2_path, region_scope="africa")
@@ -131,9 +147,7 @@ def run_daily_risk_pipeline_stac(
 
     da = da.sortby("time")
 
-    recent_da = da.sel(
-        time=slice(recent_start.isoformat(), today.isoformat())
-    )
+    recent_da = da.sel(time=slice(recent_start.isoformat(), today.isoformat()))
     normal_da = da.sel(
         time=slice(
             normal_start.isoformat(),
@@ -159,6 +173,20 @@ def run_daily_risk_pipeline_stac(
 
     feats = build_rainfall_features(recent_df, normal_df)
     result = classify_risk(feats, valid_at=today.isoformat())
+
+    metadata = adm2[
+        ["region_id", "NAME_0", "NAME_2", "shapeGroup"]
+    ].drop_duplicates()
+
+    result = result.merge(metadata, on="region_id", how="left")
+
+    result = result.rename(
+        columns={
+            "NAME_0": "country",
+            "NAME_2": "region_name",
+            "shapeGroup": "country_code",
+        }
+    )
 
     result.to_parquet(output_path, index=False)
 
