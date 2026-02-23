@@ -241,3 +241,11 @@ def explain_risk(region_id: str):
         "risk_level": row_data["risk_level"],
         "explanation": explanation,
     }
+
+# ============================
+# Debug Columns Endpoint
+# ============================
+
+@app.get("/debug/columns")
+def debug_columns():
+    return {"columns": risk_df.columns.tolist()}
