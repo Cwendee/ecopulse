@@ -132,45 +132,65 @@ The diagram below illustrates how these components interact:
 ```mermaid
 flowchart TD
 
-    User[User]
+    %% =========================
+    %% Frontend Layer
+    %% =========================
+    USER[User]
     FE[Frontend Web App]
 
-    User --> FE
+    USER --> FE
 
-    FE -->|POST /location/resolve| BE[FastAPI Backend]
-    FE -->|GET /risk| BE
-    FE -->|POST /eco/chat| BE
+    FE -->|GET /countries| API
+    FE -->|GET /countries/{code}/regions| API
+    FE -->|GET /risk/{region_id}| API
+    FE -->|GET /risk/{region_id}/explain| API
+    FE -->|POST /subscribe| API
 
-    BE --> LOC[Location Resolver]
-    BE --> RISKLOOKUP[Risk Lookup - Supabase]
-    BE --> ECO[Eco Assistant]
+    %% =========================
+    %% Backend Layer
+    %% =========================
+    API[FastAPI Backend]
 
-    DB[(Supabase Database)]
-    RISKLOOKUP --> DB
-    BE --> DB
+    API --> PARQUET[(risk_africa.parquet)]
+    API --> SUPA[(Supabase - Subscribers)]
+    API --> OPENROUTER[OpenRouter API]
 
-    ECO --> GPT[GPT-OSS API]
+    OPENROUTER --> GPT[openai/gpt-4o-mini]
 
-    STAC[CHIRPS STAC API]
-    PIPE[Daily Risk Pipeline]
+    %% =========================
+    %% Data Science Processing
+    %% =========================
+    CHIRPS[CHIRPS Daily Rainfall]
+    ADM2[geoBoundaries ADM2]
+    RAIN[rainfall.py]
+    RISK[risk.py]
+    PIPE[pipeline.py]
 
-    STAC --> PIPE
-    PIPE --> DB
+    CHIRPS --> RAIN
+    RAIN --> PIPE
+    ADM2 --> PIPE
+    RISK --> PIPE
 
-    SCHED[Scheduled Job - GitHub Action or Cron]
+    PIPE --> PARQUET
+
+    %% =========================
+    %% Scheduler
+    %% =========================
+    SCHED[Scheduled Job<br/>Cron / GitHub Action]
     SCHED --> PIPE
 ```
 
 ### 🔄 End-to-End Flow
 
-1. The user interacts with the frontend (searching a location or asking ECO a question).
-2. The frontend calls the backend API:
-   - `/location/resolve` → maps user input to a stable `region_id`.
-   - `/risk` → retrieves the latest daily risk metrics.
-   - `/eco/chat` → generates a contextual preparedness explanation.
-3. The backend retrieves precomputed risk data from Supabase.
-4. The ECO assistant calls GPT-OSS to convert deterministic risk metrics into natural language guidance.
-5. A scheduled daily pipeline processes CHIRPS rainfall data and updates regional risk records.
+1. Scheduled job (Cron / GitHub Action) triggers the daily rainfall pipeline.
+2. Pipeline processes CHIRPS rainfall data and aggregates it by ADM2 region.
+3. Deterministic risk classification logic is applied.
+4. Regional metadata from geoBoundaries ADM2 is merged.
+5. risk_africa.parquet is generated/updated as the serving dataset.
+6. FastAPI backend exposes structured endpoints for countries, regions, and risk data.
+7. On explanation requests, the backend sends risk metrics to OpenRouter (gpt-4o-mini) for natural-language summaries.
+8. Subscription requests are stored in Supabase.
+9. Frontend consumes the API and renders the dropdown-based location and risk flow.
 
 
 ## Live Backend URL
@@ -194,80 +214,43 @@ Example response:
 }
 ```
 
-# GET /risk?location=CityName
+# GET /countries
 
-- Returns a flood risk summary for a specified location.
+Returns list of supported countries.
+
+Example response:
+
+```bash
+{
+  "countries": [
+    { "code": "NGA", "name": "Nigeria" }
+  ]
+}
+```
+
+# GET /countries/{country_code}/regions
+
+Returns ADM2 regions for a selected country.
 
 Example:
 
-/risk?location=Lagos
-
-Example response:
-
 ```bash
-{
-  "location": "Lagos",
-  "risk_level": "Moderate",
-  "message": "Flood risk in Lagos is moderate."
-}
+GET /countries/NGA/regions
 ```
 
-# POST /location/resolve
+# GET /risk/{region_id}
 
-Maps user input to a stable ADM2 region_id.
+Returns latest deterministic rainfall-based risk data for a region.
 
-Request Body:
-
-```bash
-{
-  "country": "Nigeria",
-  "user_location": "Ikeja"
-}
-```
-
-Response:
+Example:
 
 ```bash
-{
-  "region_id": "NG-LA-IKJ",
-  "region_name": "Ikeja",
-  "country": "Nigeria"
-}
+GET /risk/NG-LA-IKJ
 ```
 
+# GET /risk/{region_id}/explain
 
-GET /risk?region_id=NG-LA-IKJ
-
-Returns the latest deterministic rainfall-based risk record for a region.
-
-Example response:
-
-```bash
-{
-  "region_id": "NG-LA-IKJ",
-  "country": "Nigeria",
-  "adm2_name": "Ikeja",
-  "valid_at": "2026-02-12",
-  "rainfall_index": 0.78,
-  "anomaly": 1.2,
-  "rainfall_percentile": 85,
-  "risk_level": "Moderate",
-  "data_quality": "ok"
-}
-```
-
-POST /eco/chat
-
-Generates a contextual preparedness explanation.
-
-Request Body:
-
-```bash
-{
-  "region_id": "NG-LA-IKJ",
-  "message": "Should I be worried about flooding today?"
-}
-```
+Generates a plain-language risk explanation.
 
 POST /subscribe
 
@@ -355,9 +338,12 @@ pip install -r requirements.txt
 
 SUPABASE_URL=your_project_url
 SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+
 GPT_OSS_BASE_URL=your_llm_gateway_url
 GPT_OSS_API_KEY=your_api_key
 GPT_OSS_MODEL=gpt-oss-120gb
+
+RESEND_API_KEY=your_resend_api_key
 
 ```
 
