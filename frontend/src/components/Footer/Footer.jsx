@@ -1,15 +1,17 @@
 import { Link } from "react-router-dom";
 import routes from "../../constants/routes";
-import brandLogo from "../../assets/svgIcons/footer-logo.svg";
+// import brandLogo from "../../../public/brand-logo.svg";
+import BrandLogo from "../BrandLogo/BrandLogo.jsx";
 
 const Footer = () => {
   return (
     <div className="border border-y-[#296083] typo-base">
       <div className="site-container py-4 md:py-12 md:flex justify-between items-start">
-        <div className="flex gap-8.75 items-center">
+        {/* <div className="flex gap-8.75 items-center">
           <img src={brandLogo} alt="Bramd Logo" className="w-12 h-12" />
-          <h1 className="typo-xl">Eco Pulse</h1>
-        </div>
+          <h1 className="typo-xl">EcoPulse</h1>
+        </div> */}
+        <BrandLogo />
         <div className="grid grid-cols-2 gap-10.75 justify-between mt-4 md:mt-0">
           <div>
             {[

@@ -100,3 +100,40 @@ export const emergData = {
     },
   ],
 };
+
+export const headerNavigation = [
+  {
+    title: "Home",
+    link: routes.main.home(),
+  },
+  {
+    title: "Map",
+    link: routes.main.map(),
+  },
+  {
+    title: "Resource",
+    link: routes.main.resources(),
+  },
+  {
+    title: "About Us",
+    link: routes.main.about(),
+  },
+];
+
+export const aboutUs = [
+  {
+    title: "Our Mission",
+    content: "At EcoPulse, we believe that being prepared can make all the difference. Our mission is to share clear, easy-to-understand flood-risk insights that help residents and small businesses feel informed, confident, and ready. By giving people simple, location-based guidance, we aim to make preparedness a natural and empowering part of everyday life—long before any emergency comes along.",
+    background: "bg-[#63B7B9]",
+  },
+  {
+    title: "Our Vision",
+    content: "We imagine a world where people feel safe, supported, and ready—no matter the weather. A world where preparedness is part of everyday life, and where everyone has the guidance they need to protect their homes, their dreams, and their future.",
+    background: "bg-[#C6E2E8]",
+  },
+  {
+    title: "Our Values",
+    content: "At EcoPulse, we value clarity, trust, and community. We believe everyone deserves simple, reliable information that helps them stay safe. We are committed to transparency, compassion, and continuous learning—so we can support people with the guidance they need, when they need it most. Our values are rooted in care and responsibility. We listen to communities, prioritize ease of use, and strive to turn complex data into guidance that supports safety, confidence, and resilience for all.",
+    background: "bg-[#64A5CE]",
+  },
+]
