@@ -6,8 +6,7 @@ from pathlib import Path
 import pandas as pd
 import os
 
-from sendgrid import SendGridAPIClient
-from sendgrid.helpers.mail import Mail
+import resend
 
 from app.routes import location, risk, chat
 from app.services.supabase_client import supabase
@@ -75,29 +74,28 @@ for communities or local authorities. Keep it under 120 words.
 # ============================
 
 def send_confirmation_email(to_email: str):
-    api_key = os.getenv("SENDGRID_API_KEY")
+    api_key = os.getenv("RESEND_API_KEY")
 
     if not api_key:
-        print("SENDGRID_API_KEY not set. Skipping email send.")
+        print("RESEND_API_KEY not set. Skipping email send.")
         return
 
-    message = Mail(
-        from_email="your_verified_email@gmail.com",
-        to_emails=to_email,
-        subject="Ecopulse Subscription Confirmed",
-        html_content="""
-        <strong>You're subscribed to Ecopulse!</strong><br><br>
-        You will now receive rainfall risk alerts for your selected region.<br><br>
-        Stay safe and prepared.
-        """
-    )
+    resend.api_key = api_key
 
     try:
-        sg = SendGridAPIClient(api_key)
-        sg.send(message)
+        resend.Emails.send({
+            "from": "Ecopulse <onboarding@resend.dev>",
+            "to": to_email,
+            "subject": "Ecopulse Subscription Confirmed",
+            "html": """
+                <strong>You're subscribed to Ecopulse!</strong><br><br>
+                You will now receive rainfall risk alerts for your selected region.<br><br>
+                Stay safe and prepared.
+            """
+        })
         print(f"Confirmation email sent to {to_email}")
     except Exception as e:
-        print(f"SendGrid error: {e}")
+        print(f"Resend error: {e}")
 
 # ============================
 # Pydantic Models
