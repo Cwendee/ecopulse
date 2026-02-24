@@ -82,7 +82,7 @@ def send_confirmation_email(to_email: str):
         return
 
     message = Mail(
-        from_email="no-reply@ecopulse.app",  # Must be verified in SendGrid
+        from_email="your_verified_email@gmail.com",
         to_emails=to_email,
         subject="Ecopulse Subscription Confirmed",
         html_content="""
