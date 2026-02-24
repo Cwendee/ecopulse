@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Button from "../ReUsables/Button";
 import BrandLogo from "../BrandLogo/BrandLogo.jsx";
 import RightArrow from "../../assets/svgIcons/right-arrow.svg?react";
@@ -7,6 +8,8 @@ import Cancel from "../../assets/svgIcons/cancel.svg?react";
 import { headerNavigation } from "../../constants/index.js";
 
 const Header = () => {
+  const navigate = useNavigate();
+
   const [openMenu, setOpenMenu] = useState(false);
 
   function handleMenu () {
@@ -24,6 +27,7 @@ const Header = () => {
             {
               headerNavigation.map((nav, index) => <li 
               key={index} 
+              onClick={() => nav.link && navigate(nav.link)}
               className="text-[22px] md:text-[25px] xl:text-[28px] font-medium">
                 {nav.title}
               </li>)
@@ -47,12 +51,13 @@ const Header = () => {
                 {
                   headerNavigation.map((nav, index) => <li 
                   key={index} 
+                  onClick={() => nav.link && navigate(nav.link)}
                   className="text-[22px] font-medium">
                     {nav.title}
                   </li>)
                 }
               </ul>
-              <Button children={"Receive flood alerts"} rightSection={<RightArrow/>} className="btn btn-primary btn-md mx-4" />
+              <Button children={"Receive Flood Alerts"} rightSection={<RightArrow/>} className="btn btn-primary btn-md mx-4" />
             </div>
         </aside>
 
@@ -66,7 +71,7 @@ const Header = () => {
         } */}
 
         <div className="header__button hidden md:block">
-          <Button children={"Receive flood alerts"} rightSection={<RightArrow/>} className="btn btn-primary btn-md" />
+          <Button children={"Receive Flood Alerts"} rightSection={<RightArrow/>} className="btn btn-primary btn-md" />
         </div>
       </div>
     </header>
