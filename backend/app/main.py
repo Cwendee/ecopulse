@@ -48,27 +48,63 @@ if not RISK_FILE.exists():
 risk_df = pd.read_parquet(RISK_FILE)
 
 # ============================
-# Auto Country Mapping
+# Country Code Mapping (FULL AFRICA ISO-3)
 # ============================
 
-# If dataset already contains country_name column, use it.
-if "country_name" in risk_df.columns:
-    COUNTRY_MAP = (
-        risk_df[["country_code", "country_name"]]
-        .dropna()
-        .drop_duplicates()
-        .set_index("country_code")["country_name"]
-        .to_dict()
-    )
-else:
-    # Fallback minimal mapping (extend if needed)
-    COUNTRY_MAP = {
-        "NGA": "Nigeria",
-        "GHA": "Ghana",
-        "KEN": "Kenya",
-        "UGA": "Uganda",
-        "TZA": "Tanzania",
-    }
+COUNTRY_MAP = {
+    "AGO": "Angola",
+    "BDI": "Burundi",
+    "BEN": "Benin",
+    "BFA": "Burkina Faso",
+    "BWA": "Botswana",
+    "CAF": "Central African Republic",
+    "CIV": "Côte d'Ivoire",
+    "CMR": "Cameroon",
+    "COD": "Democratic Republic of the Congo",
+    "COG": "Republic of the Congo",
+    "COM": "Comoros",
+    "CPV": "Cape Verde",
+    "DJI": "Djibouti",
+    "DZA": "Algeria",
+    "EGY": "Egypt",
+    "ERI": "Eritrea",
+    "ETH": "Ethiopia",
+    "GAB": "Gabon",
+    "GHA": "Ghana",
+    "GIN": "Guinea",
+    "GMB": "Gambia",
+    "GNB": "Guinea-Bissau",
+    "GNQ": "Equatorial Guinea",
+    "KEN": "Kenya",
+    "LBR": "Liberia",
+    "LBY": "Libya",
+    "LSO": "Lesotho",
+    "MAR": "Morocco",
+    "MDG": "Madagascar",
+    "MLI": "Mali",
+    "MOZ": "Mozambique",
+    "MRT": "Mauritania",
+    "MUS": "Mauritius",
+    "MWI": "Malawi",
+    "NAM": "Namibia",
+    "NER": "Niger",
+    "NGA": "Nigeria",
+    "RWA": "Rwanda",
+    "SDN": "Sudan",
+    "SEN": "Senegal",
+    "SLE": "Sierra Leone",
+    "SOM": "Somalia",
+    "SSD": "South Sudan",
+    "SWZ": "Eswatini",
+    "TCD": "Chad",
+    "TGO": "Togo",
+    "TUN": "Tunisia",
+    "TZA": "Tanzania",
+    "UGA": "Uganda",
+    "ZAF": "South Africa",
+    "ZMB": "Zambia",
+    "ZWE": "Zimbabwe"
+}
 
 # ============================
 # Utility Function
@@ -148,7 +184,7 @@ def health_check():
     return {"status": "ok"}
 
 # ============================
-# Countries Endpoint (UPDATED)
+# Countries Endpoint (FIXED)
 # ============================
 
 @app.get("/countries")
