@@ -4,6 +4,10 @@ from pydantic import BaseModel, EmailStr
 from dotenv import load_dotenv
 from pathlib import Path
 import pandas as pd
+import os
+
+from sendgrid import SendGridAPIClient
+from sendgrid.helpers.mail import Mail
 
 from app.routes import location, risk, chat
 from app.services.supabase_client import supabase
@@ -40,6 +44,9 @@ app.add_middleware(
 BASE_DIR = Path(__file__).resolve().parents[2]
 RISK_FILE = BASE_DIR / "DataPipeline" / "data" / "processed" / "risk_africa.parquet"
 
+if not RISK_FILE.exists():
+    raise RuntimeError("Risk dataset not found. Ensure parquet file is generated.")
+
 risk_df = pd.read_parquet(RISK_FILE)
 
 # ============================
@@ -62,6 +69,35 @@ Risk level: {row['risk_level']}
 Explain this risk clearly in simple language and give one practical recommendation
 for communities or local authorities. Keep it under 120 words.
 """
+
+# ============================
+# Email Utility
+# ============================
+
+def send_confirmation_email(to_email: str):
+    api_key = os.getenv("SENDGRID_API_KEY")
+
+    if not api_key:
+        print("SENDGRID_API_KEY not set. Skipping email send.")
+        return
+
+    message = Mail(
+        from_email="no-reply@ecopulse.app",  # Must be verified in SendGrid
+        to_emails=to_email,
+        subject="Ecopulse Subscription Confirmed",
+        html_content="""
+        <strong>You're subscribed to Ecopulse!</strong><br><br>
+        You will now receive rainfall risk alerts for your selected region.<br><br>
+        Stay safe and prepared.
+        """
+    )
+
+    try:
+        sg = SendGridAPIClient(api_key)
+        sg.send(message)
+        print(f"Confirmation email sent to {to_email}")
+    except Exception as e:
+        print(f"SendGrid error: {e}")
 
 # ============================
 # Pydantic Models
@@ -172,7 +208,11 @@ def explain_risk(region_id: str):
 
     row_data = row.iloc[0]
     prompt = build_prompt(row_data)
-    explanation = generate(prompt)
+
+    try:
+        explanation = generate(prompt)
+    except Exception:
+        explanation = "Unable to generate AI explanation at the moment."
 
     return {
         "region_id": region_id,
@@ -204,11 +244,18 @@ def subscribe(data: SubscriptionRequest):
         "alert_enabled": True,
     }
 
-    response = (
-        supabase.table("subscribers")
-        .upsert(subscription_data, on_conflict="email")
-        .execute()
-    )
+    try:
+        response = (
+            supabase.table("subscribers")
+            .upsert(subscription_data, on_conflict="email")
+            .execute()
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Database error: {e}")
+
+    # Send confirmation email (non-blocking failure)
+    if data.email_delivery:
+        send_confirmation_email(data.email)
 
     return {
         "message": "Subscription saved successfully",
