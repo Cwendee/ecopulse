@@ -5,7 +5,6 @@ from dotenv import load_dotenv
 from pathlib import Path
 import pandas as pd
 import os
-
 import resend
 
 from app.routes import location, risk, chat
@@ -47,6 +46,29 @@ if not RISK_FILE.exists():
     raise RuntimeError("Risk dataset not found. Ensure parquet file is generated.")
 
 risk_df = pd.read_parquet(RISK_FILE)
+
+# ============================
+# Auto Country Mapping
+# ============================
+
+# If dataset already contains country_name column, use it.
+if "country_name" in risk_df.columns:
+    COUNTRY_MAP = (
+        risk_df[["country_code", "country_name"]]
+        .dropna()
+        .drop_duplicates()
+        .set_index("country_code")["country_name"]
+        .to_dict()
+    )
+else:
+    # Fallback minimal mapping (extend if needed)
+    COUNTRY_MAP = {
+        "NGA": "Nigeria",
+        "GHA": "Ghana",
+        "KEN": "Kenya",
+        "UGA": "Uganda",
+        "TZA": "Tanzania",
+    }
 
 # ============================
 # Utility Function
@@ -126,19 +148,28 @@ def health_check():
     return {"status": "ok"}
 
 # ============================
-# Countries Endpoint
+# Countries Endpoint (UPDATED)
 # ============================
 
 @app.get("/countries")
 def get_countries():
-    countries = (
+    codes = (
         risk_df["country_code"]
         .dropna()
         .unique()
         .tolist()
     )
-    countries.sort()
-    return {"countries": countries}
+    codes.sort()
+
+    return {
+        "countries": [
+            {
+                "code": code,
+                "name": COUNTRY_MAP.get(code, code)
+            }
+            for code in codes
+        ]
+    }
 
 # ============================
 # Regions by Country Code
@@ -251,7 +282,6 @@ def subscribe(data: SubscriptionRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Database error: {e}")
 
-    # Send confirmation email (non-blocking failure)
     if data.email_delivery:
         send_confirmation_email(data.email)
 
