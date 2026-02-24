@@ -7,7 +7,8 @@ const routes = {
     faq: () => "/faq",
     support: () => "/community-page",
     emergency: () => "/emergency-prep",
-    localResources: () => "/local-resources"
+    localResources: () => "/local-resources",
+    map: () => "/map",
   },
 };
 
