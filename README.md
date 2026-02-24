@@ -141,9 +141,9 @@ flowchart TD
     USER --> FE
 
     FE -->|GET /countries| API
-    FE -->|GET /countries/{code}/regions| API
-    FE -->|GET /risk/{region_id}| API
-    FE -->|GET /risk/{region_id}/explain| API
+    FE -->|GET /countries/:code/regions| API
+    FE -->|GET /risk/:region_id| API
+    FE -->|GET /risk/:region_id/explain| API
     FE -->|POST /subscribe| API
 
     %% =========================
