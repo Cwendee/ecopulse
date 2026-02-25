@@ -1,7 +1,6 @@
 from fastapi import APIRouter, HTTPException, Query
 from pathlib import Path
 import pandas as pd
-
 from app.services.gpt_oss_client import generate
 
 router = APIRouter()
@@ -18,14 +17,31 @@ if not RISK_FILE.exists():
 
 risk_df = pd.read_parquet(RISK_FILE)
 
-
 # ============================
-# Utility: Case-insensitive match
+# Utility
 # ============================
 
 def normalize(text: str):
     return text.strip().lower()
 
+# Country name → ISO3 mapping
+COUNTRY_MAP = {
+    "algeria": "DZA",
+    "angola": "AGO",
+    "benin": "BEN",
+    "burkina faso": "BFA",
+    "burundi": "BDI",
+    "botswana": "BWA",
+    "cameroon": "CMR",
+    "cape verde": "CPV",
+    "comoros": "COM",
+    "congo": "COG",
+    "democratic republic of the congo": "COD",
+    "ghana": "GHA",
+    "kenya": "KEN",
+    "nigeria": "NGA",
+    # Add more if needed
+}
 
 # ============================
 # Get Risk by Region ID
@@ -54,9 +70,8 @@ def get_risk(region_id: str):
         "data_quality": data.get("data_quality"),
     }
 
-
 # ============================
-# NEW: Get Risk by Country + Region Name
+# Get Risk by Country + Region Name
 # ============================
 
 @router.get("/risk/by-name")
@@ -65,8 +80,15 @@ def get_risk_by_name(
     region: str = Query(...)
 ):
 
+    country_key = normalize(country)
+
+    if country_key not in COUNTRY_MAP:
+        raise HTTPException(status_code=404, detail="Country not supported")
+
+    country_code = COUNTRY_MAP[country_key]
+
     filtered = risk_df[
-        (risk_df["country_name"].str.lower() == normalize(country)) &
+        (risk_df["country_code"] == country_code) &
         (risk_df["region_name"].str.lower() == normalize(region))
     ]
 
@@ -78,7 +100,7 @@ def get_risk_by_name(
     return {
         "region_id": data["region_id"],
         "region_name": data.get("region_name"),
-        "country_name": data.get("country_name"),
+        "country_code": data.get("country_code"),
         "risk_level": data.get("risk_level"),
         "rainfall_mean_recent": data.get("rainfall_mean_recent"),
         "rainfall_mean_normal": data.get("rainfall_mean_normal"),
@@ -88,9 +110,8 @@ def get_risk_by_name(
         "data_quality": data.get("data_quality"),
     }
 
-
 # ============================
-# AI Explanation (by ID)
+# AI Explanation (by Region ID)
 # ============================
 
 def build_prompt(row):
@@ -98,7 +119,7 @@ def build_prompt(row):
 You are an expert climate risk analyst.
 
 Region: {row.get('region_name')}
-Country: {row.get('country_name')}
+Country Code: {row.get('country_code')}
 
 Recent rainfall mean: {row.get('rainfall_mean_recent')} mm
 Baseline rainfall mean: {row.get('rainfall_mean_normal')} mm
@@ -109,6 +130,31 @@ Explain this risk clearly in simple language and give one practical recommendati
 Keep it under 120 words.
 """
 
+@router.get("/risk/{region_id}/explain")
+def explain_risk(region_id: str):
+
+    row = risk_df[risk_df["region_id"] == region_id]
+
+    if row.empty:
+        raise HTTPException(status_code=404, detail="Region not found")
+
+    data = row.iloc[0]
+    prompt = build_prompt(data)
+
+    try:
+        explanation = generate(prompt)
+    except Exception:
+        explanation = "Unable to generate AI explanation at the moment."
+
+    return {
+        "region_id": region_id,
+        "risk_level": data.get("risk_level"),
+        "explanation": explanation,
+    }
+
+# ============================
+# AI Explanation (by Name)
+# ============================
 
 @router.get("/risk/by-name/explain")
 def explain_risk_by_name(
@@ -116,8 +162,15 @@ def explain_risk_by_name(
     region: str = Query(...)
 ):
 
+    country_key = normalize(country)
+
+    if country_key not in COUNTRY_MAP:
+        raise HTTPException(status_code=404, detail="Country not supported")
+
+    country_code = COUNTRY_MAP[country_key]
+
     filtered = risk_df[
-        (risk_df["country"].str.lower() == normalize(country))
+        (risk_df["country_code"] == country_code) &
         (risk_df["region_name"].str.lower() == normalize(region))
     ]
 
@@ -134,7 +187,7 @@ def explain_risk_by_name(
 
     return {
         "region_name": data.get("region_name"),
-        "country_name": data.get("country_name"),
+        "country_code": data.get("country_code"),
         "risk_level": data.get("risk_level"),
         "explanation": explanation,
     }
