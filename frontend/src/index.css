@@ -94,7 +94,7 @@
   }
 
   .btn-accent {
-    @apply text-[#2A2D34] border border-solid border-[#95E06C] hover:bg-[#296083] hover:text-white hover:scale-[1.2] hover:border-[#296083];
+    @apply text-[#2A2D34] border border-solid border-[#95E06C] hover:bg-[#95E06C] hover:scale-[1.02];
   }
 
   .btn-outline {

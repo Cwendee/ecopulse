@@ -1,5 +1,6 @@
 import { ResourcesData } from "../constants";
 import { useNavigate } from "react-router-dom";
+import { pages } from "../constants/index";
 import polygon from "../assets/svgIcons/polygon.svg";
 import Button from "../components/ReUsables/Button";
 import HeroS from "../assets/images/Hero-s.png";
@@ -26,7 +27,7 @@ const Landing = () => {
           </div>
 
           <input type="email" placeholder="Enter your email to receive early flood warnings" className="w-full bg-white rounded-[20px] py-1.75 px-5 " /> <br />
-          <Button children={"Receive emergency flood alerts"} rightSection={<RightArrow />} className="btn btn-primary btn-md"/>
+          <Button children={"Receive emergency flood alerts"} rightSection={<RightArrow />} className="btn btn-primary btn-md" onClick={() => pages.signup && navigate(pages.signup)} />
         </div>
       </section>
 
@@ -37,8 +38,8 @@ const Landing = () => {
           <Button children={"Use My Current Location"} rightSection={<LocationPointer />} className="btn btn-md btn-accent " />
 
           <div className="flex gap-5 " >
-            <Button children={"Check Flood Risk"} className="btn btn-accent btn-md " />
-            <Button children={"View Full Map"} rightSection={<RightArrow />} className="btn btn-md btn-accent " />
+            <Button children={"Check Flood Risk"} className="btn btn-primary btn-lg " />
+            <Button children={"View Full Map"} rightSection={<RightArrow />} className="btn btn-md btn-accent " onClick={() => pages.map && navigate(pages.map)} />
           </div>
 
         </div>
@@ -77,7 +78,7 @@ const Landing = () => {
           </div>
         </div>
         <div className="flex justify-center mx-auto py-8">
-          <Button className="btn btn-primary btn-md">Start chat</Button>
+          <Button className="btn btn-primary btn-md" onClick={() => pages.chat && navigate(pages.chat)}>Start chat</Button>
         </div>
       </section>
     </section>
