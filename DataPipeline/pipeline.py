@@ -29,7 +29,7 @@ def _split_recent_normal(paths: list[str], recent_days: int, normal_days: int, v
     return recent, normal, today
 
 
-def run_daily_risk_pipeline(adm2_path: str, rainfall_glob: str, recent_days: int = 7, normal_days: int = 60, valid_date: Optional[str] = None, output_path: str = "data/processed/risk_adm2.parquet") -> pd.DataFrame:
+def run_daily_risk_pipeline(adm2_path: str, rainfall_glob: str, recent_days: int = 7, normal_days: int = 60, valid_date: Optional[str] = None, output_path: str = "data/processed/risk_africa.parquet") -> pd.DataFrame:
     adm2 = load_adm2_boundaries(adm2_path)
     all_paths = list_geotiff_files(rainfall_glob)
     recent_paths, normal_paths, today = _split_recent_normal(all_paths, recent_days, normal_days, valid_date)
@@ -37,6 +37,13 @@ def run_daily_risk_pipeline(adm2_path: str, rainfall_glob: str, recent_days: int
     normal_df = aggregate_geotiff_period_mean(normal_paths, adm2, "rainfall_mean_normal")
     feats = build_rainfall_features(recent_df, normal_df)
     result = classify_risk(feats, valid_at=today.isoformat())
+    
+    # Merge metadata for backend/frontend consistency as per integration report
+    # We use adm2 columns: NAME_0 (country), NAME_2 (region_name), shapeGroup (country_code)
+    meta = adm2[["region_id", "NAME_0", "NAME_2", "shapeGroup"]].copy()
+    meta.columns = ["region_id", "country", "region_name", "country_code"]
+    result = result.merge(meta, on="region_id", how="left")
+    
     try:
         result.to_parquet(output_path, index=False)
     except Exception:
@@ -44,7 +51,7 @@ def run_daily_risk_pipeline(adm2_path: str, rainfall_glob: str, recent_days: int
     return result
 
 
-def run_daily_risk_pipeline_stac(adm2_path: str, bbox: Tuple[float, float, float, float], recent_days: int = 7, normal_days: int = 60, valid_date: Optional[str] = None, output_path: str = "data/processed/risk_adm2.parquet") -> pd.DataFrame:
+def run_daily_risk_pipeline_stac(adm2_path: str, bbox: Tuple[float, float, float, float], recent_days: int = 7, normal_days: int = 60, valid_date: Optional[str] = None, output_path: str = "data/processed/risk_africa.parquet") -> pd.DataFrame:
     adm2 = load_adm2_boundaries(adm2_path)
     if valid_date is None:
         today = date.today()
@@ -68,6 +75,12 @@ def run_daily_risk_pipeline_stac(adm2_path: str, bbox: Tuple[float, float, float
     normal_df = aggregate_xarray_period_mean(normal_mean, adm2, "rainfall_mean_normal")
     feats = build_rainfall_features(recent_df, normal_df)
     result = classify_risk(feats, valid_at=today.isoformat())
+
+    # Merge metadata for backend/frontend consistency as per integration report
+    meta = adm2[["region_id", "NAME_0", "NAME_2", "shapeGroup"]].copy()
+    meta.columns = ["region_id", "country", "region_name", "country_code"]
+    result = result.merge(meta, on="region_id", how="left")
+
     try:
         result.to_parquet(output_path, index=False)
     except Exception:

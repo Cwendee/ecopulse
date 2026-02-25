@@ -4,7 +4,7 @@ from typing import Optional, Tuple, List
 import geopandas as gpd
 
 from locations import load_adm2_boundaries
-from gpt_oss_client import generate
+from openrouter_client import generate
 
 
 def _country_column(gdf: gpd.GeoDataFrame) -> str:
