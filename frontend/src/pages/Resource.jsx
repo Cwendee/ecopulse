@@ -10,7 +10,7 @@ const Resource = () => {
         {ResourcessPage.map((item, index) => (
           <div
             key={index}
-            className="md:flex space-y-2 md:space-y-0 items-center justify-between border-[2.2px] border-[#296083] bg-[#C6E2E8] p-3 rounded-xl"
+            className="md:flex space-y-2 md:space-y-0 items-center justify-between border-[2.2px] border-[#296083] bg-[#C6E2E8] p-3 rounded-xl hover-lift"
             onClick={() => item.link && navigate(item.link)}
           >
             <div>

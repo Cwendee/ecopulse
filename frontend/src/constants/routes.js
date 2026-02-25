@@ -9,9 +9,14 @@ const routes = {
     emergency: () => "/emergency-prep",
     localResources: () => "/local-resources",
     map: () => "/map",
+<<<<<<< HEAD
     signup: () => "/sign-up",
     chatbot: () => "/chat-bot",
     result: () => "/result",
+=======
+    subscribe: () => "/sign-up"
+
+>>>>>>> main
   },
 };
 

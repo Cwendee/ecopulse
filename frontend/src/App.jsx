@@ -11,14 +11,20 @@ import Faq from "./pages/Faq";
 import CommunityPage from "./pages/CommunityPage";
 import EmergencyPrep from "./pages/EmergencyPrep";
 import LocalPage from "./pages/LocalPage";
+import SignUp from "./pages/SignUp";
 import Map from "./pages/Map";
+<<<<<<< HEAD
 import SignUp from "./pages/SignUp";
 import ChatBot from "./pages/ChatBot";
 import Result from "./pages/Result";
+=======
+import Scroll from "./layouts/Scroll";
+>>>>>>> main
 
 const App = () => {
   return (
     <BrowserRouter>
+    <Scroll/>
       <Routes>
         <Route element={<MainLayout />}>
           <Route index element={<Landing />} />
@@ -29,6 +35,7 @@ const App = () => {
           <Route path={routes.main.support()} element={<CommunityPage />} />
           <Route path={routes.main.emergency()} element={<EmergencyPrep />} />
           <Route path={routes.main.localResources()} element={<LocalPage />} />
+          <Route path={routes.main.subscribe()} element={<SignUp />} />
           <Route path={routes.main.map()} element={<Map />} />
           <Route path={routes.main.signup()} element={<SignUp />} />
           <Route path={routes.main.chatbot()} element={<ChatBot />} />

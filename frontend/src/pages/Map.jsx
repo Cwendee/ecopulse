@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import Button from "../components/ReUsables/Button"
 import RiskCard from "../pages/RiskCard"
@@ -33,3 +34,10 @@ const Map = () => {
 }
  
 export default Map;
+=======
+const Map = () => {
+  return <div>Map</div>;
+};
+
+export default Map;
+>>>>>>> main
