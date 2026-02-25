@@ -12,10 +12,12 @@ import EmergencyPrep from "./pages/EmergencyPrep";
 import LocalPage from "./pages/LocalPage";
 import SignUp from "./pages/SignUp";
 import Map from "./pages/Map";
+import Scroll from "./layouts/Scroll";
 
 const App = () => {
   return (
     <BrowserRouter>
+    <Scroll/>
       <Routes>
         <Route element={<MainLayout />}>
           <Route index element={<Landing />} />
