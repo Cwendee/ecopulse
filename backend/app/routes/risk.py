@@ -40,7 +40,7 @@ COUNTRY_MAP = {
     "ghana": "GHA",
     "kenya": "KEN",
     "nigeria": "NGA",
-    # Add more if needed
+    # Add more as needed
 }
 
 # ============================
@@ -71,7 +71,7 @@ def get_risk(region_id: str):
     }
 
 # ============================
-# Get Risk by Country + Region Name
+# Get Risk by Country + Region Name (SME-Friendly)
 # ============================
 
 @router.get("/risk/by-name")
@@ -89,12 +89,13 @@ def get_risk_by_name(
 
     filtered = risk_df[
         (risk_df["country_code"] == country_code) &
-        (risk_df["region_name"].str.lower() == normalize(region))
+        (risk_df["region_name"].str.lower().str.contains(normalize(region), na=False))
     ]
 
     if filtered.empty:
         raise HTTPException(status_code=404, detail="Region not found")
 
+    # If multiple matches, take the first (safe for now)
     data = filtered.iloc[0]
 
     return {
@@ -171,7 +172,7 @@ def explain_risk_by_name(
 
     filtered = risk_df[
         (risk_df["country_code"] == country_code) &
-        (risk_df["region_name"].str.lower() == normalize(region))
+        (risk_df["region_name"].str.lower().str.contains(normalize(region), na=False))
     ]
 
     if filtered.empty:
