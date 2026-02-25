@@ -10,6 +10,7 @@ import Faq from "./pages/Faq";
 import CommunityPage from "./pages/CommunityPage";
 import EmergencyPrep from "./pages/EmergencyPrep";
 import LocalPage from "./pages/LocalPage";
+import SignUp from "./pages/SignUp";
 import Map from "./pages/Map";
 
 const App = () => {
@@ -25,6 +26,7 @@ const App = () => {
           <Route path={routes.main.support()} element={<CommunityPage />} />
           <Route path={routes.main.emergency()} element={<EmergencyPrep />} />
           <Route path={routes.main.localResources()} element={<LocalPage />} />
+          <Route path={routes.main.subscribe()} element={<SignUp />} />
           <Route path={routes.main.map()} element={<Map />} />
         </Route>
 
