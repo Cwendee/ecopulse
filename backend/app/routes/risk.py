@@ -117,7 +117,7 @@ def explain_risk_by_name(
 ):
 
     filtered = risk_df[
-        (risk_df["country_name"].str.lower() == normalize(country)) &
+        (risk_df["country"].str.lower() == normalize(country))
         (risk_df["region_name"].str.lower() == normalize(region))
     ]
 
