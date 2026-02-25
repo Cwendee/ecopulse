@@ -17,7 +17,7 @@ if not RISK_FILE.exists():
 risk_df = pd.read_parquet(RISK_FILE)
 
 # ============================
-# Structured SME Messaging
+# SME Structured Messaging
 # ============================
 
 def build_structured_message(risk_level: str):
@@ -25,40 +25,44 @@ def build_structured_message(risk_level: str):
     risk = (risk_level or "").lower()
 
     if risk == "low":
-        return {
-            "indicator": "🟢",
-            "title": "Low Risk",
-            "line1": "Rainfall is within normal range.",
-            "line2": "No immediate flood threat.",
-            "recommendation": "Continue normal activities and monitor updates."
-        }
+        indicator = "🟢"
+        title = "Low Risk"
+        line1 = "Rainfall is within normal range."
+        line2 = "No immediate flood threat."
+        recommendation = "Continue normal activities and monitor updates."
 
     elif risk == "moderate":
-        return {
-            "indicator": "🟡",
-            "title": "Moderate Risk",
-            "line1": "Rainfall levels are above normal.",
-            "line2": "Localized flooding may occur.",
-            "recommendation": "Prepare drainage and monitor closely."
-        }
+        indicator = "🟡"
+        title = "Moderate Risk"
+        line1 = "Rainfall levels are above normal."
+        line2 = "Localized flooding may occur."
+        recommendation = "Prepare drainage and monitor closely."
 
     elif risk == "high":
-        return {
-            "indicator": "🔴",
-            "title": "High Risk",
-            "line1": "Rainfall significantly exceeds normal levels.",
-            "line2": "Flooding is likely.",
-            "recommendation": "Take precautionary measures immediately."
-        }
+        indicator = "🔴"
+        title = "High Risk"
+        line1 = "Rainfall significantly exceeds normal levels."
+        line2 = "Flooding is likely."
+        recommendation = "Take precautionary measures immediately."
 
     else:
-        return {
-            "indicator": "⚪",
-            "title": "Risk Status Unavailable",
-            "line1": "Risk data is currently unavailable.",
-            "line2": "",
-            "recommendation": "Please check again later."
-        }
+        indicator = "⚪"
+        title = "Risk Status Unavailable"
+        line1 = "Risk data is currently unavailable."
+        line2 = ""
+        recommendation = "Please check again later."
+
+    # Small readable explanation for UI compatibility
+    explanation = f"{line1} {line2} Recommendation: {recommendation}"
+
+    return {
+        "indicator": indicator,
+        "title": title,
+        "line1": line1,
+        "line2": line2,
+        "recommendation": recommendation,
+        "explanation": explanation
+    }
 
 # ============================
 # Get Risk by Region ID
@@ -88,7 +92,7 @@ def get_risk(region_id: str):
     }
 
 # ============================
-# Explain Risk (Structured SME Format)
+# Explain Risk (Structured + Short Explanation)
 # ============================
 
 @router.get("/risk/{region_id}/explain")
