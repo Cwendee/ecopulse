@@ -1,11 +1,5 @@
-
-
 const Map = () => {
-    return ( 
-        <>
-        oooooo
-        </>
-     );
-}
- 
+  return <div>Map</div>;
+};
+
 export default Map;

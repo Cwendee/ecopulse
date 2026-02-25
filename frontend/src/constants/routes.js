@@ -9,6 +9,8 @@ const routes = {
     emergency: () => "/emergency-prep",
     localResources: () => "/local-resources",
     map: () => "/map",
+    subscribe: () => "/sign-up"
+
   },
 };
 
