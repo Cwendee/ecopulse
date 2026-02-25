@@ -48,66 +48,34 @@ if not RISK_FILE.exists():
 risk_df = pd.read_parquet(RISK_FILE)
 
 # ============================
-# Country Code Mapping (FULL AFRICA ISO-3)
+# Country Mapping
 # ============================
 
 COUNTRY_MAP = {
-    "AGO": "Angola",
-    "BDI": "Burundi",
-    "BEN": "Benin",
-    "BFA": "Burkina Faso",
-    "BWA": "Botswana",
-    "CAF": "Central African Republic",
-    "CIV": "Côte d'Ivoire",
-    "CMR": "Cameroon",
-    "COD": "Democratic Republic of the Congo",
-    "COG": "Republic of the Congo",
-    "COM": "Comoros",
-    "CPV": "Cape Verde",
-    "DJI": "Djibouti",
-    "DZA": "Algeria",
-    "EGY": "Egypt",
-    "ERI": "Eritrea",
-    "ETH": "Ethiopia",
-    "GAB": "Gabon",
-    "GHA": "Ghana",
-    "GIN": "Guinea",
-    "GMB": "Gambia",
-    "GNB": "Guinea-Bissau",
-    "GNQ": "Equatorial Guinea",
-    "KEN": "Kenya",
-    "LBR": "Liberia",
-    "LBY": "Libya",
-    "LSO": "Lesotho",
-    "MAR": "Morocco",
-    "MDG": "Madagascar",
-    "MLI": "Mali",
-    "MOZ": "Mozambique",
-    "MRT": "Mauritania",
-    "MUS": "Mauritius",
-    "MWI": "Malawi",
-    "NAM": "Namibia",
-    "NER": "Niger",
-    "NGA": "Nigeria",
-    "RWA": "Rwanda",
-    "SDN": "Sudan",
-    "SEN": "Senegal",
-    "SLE": "Sierra Leone",
-    "SOM": "Somalia",
-    "SSD": "South Sudan",
-    "SWZ": "Eswatini",
-    "TCD": "Chad",
-    "TGO": "Togo",
-    "TUN": "Tunisia",
-    "TZA": "Tanzania",
-    "UGA": "Uganda",
-    "ZAF": "South Africa",
-    "ZMB": "Zambia",
-    "ZWE": "Zimbabwe"
+    "AGO": "Angola", "BDI": "Burundi", "BEN": "Benin",
+    "BFA": "Burkina Faso", "BWA": "Botswana",
+    "CAF": "Central African Republic", "CIV": "Côte d'Ivoire",
+    "CMR": "Cameroon", "COD": "Democratic Republic of the Congo",
+    "COG": "Republic of the Congo", "COM": "Comoros",
+    "CPV": "Cape Verde", "DJI": "Djibouti", "DZA": "Algeria",
+    "EGY": "Egypt", "ERI": "Eritrea", "ETH": "Ethiopia",
+    "GAB": "Gabon", "GHA": "Ghana", "GIN": "Guinea",
+    "GMB": "Gambia", "GNB": "Guinea-Bissau",
+    "GNQ": "Equatorial Guinea", "KEN": "Kenya",
+    "LBR": "Liberia", "LBY": "Libya", "LSO": "Lesotho",
+    "MAR": "Morocco", "MDG": "Madagascar", "MLI": "Mali",
+    "MOZ": "Mozambique", "MRT": "Mauritania",
+    "MUS": "Mauritius", "MWI": "Malawi", "NAM": "Namibia",
+    "NER": "Niger", "NGA": "Nigeria", "RWA": "Rwanda",
+    "SDN": "Sudan", "SEN": "Senegal", "SLE": "Sierra Leone",
+    "SOM": "Somalia", "SSD": "South Sudan",
+    "SWZ": "Eswatini", "TCD": "Chad", "TGO": "Togo",
+    "TUN": "Tunisia", "TZA": "Tanzania", "UGA": "Uganda",
+    "ZAF": "South Africa", "ZMB": "Zambia", "ZWE": "Zimbabwe"
 }
 
 # ============================
-# Utility Function
+# Prompt Builder
 # ============================
 
 def build_prompt(row):
@@ -133,9 +101,7 @@ for communities or local authorities. Keep it under 120 words.
 
 def send_confirmation_email(to_email: str):
     api_key = os.getenv("RESEND_API_KEY")
-
     if not api_key:
-        print("RESEND_API_KEY not set. Skipping email send.")
         return
 
     resend.api_key = api_key
@@ -151,12 +117,11 @@ def send_confirmation_email(to_email: str):
                 Stay safe and prepared.
             """
         })
-        print(f"Confirmation email sent to {to_email}")
     except Exception as e:
         print(f"Resend error: {e}")
 
 # ============================
-# Pydantic Models
+# Models
 # ============================
 
 class SubscriptionRequest(BaseModel):
@@ -171,7 +136,6 @@ class SubscriptionRequest(BaseModel):
     in_app_delivery: bool = False
     browser_delivery: bool = False
 
-
 class UnsubscribeRequest(BaseModel):
     email: EmailStr
 
@@ -184,109 +148,7 @@ def health_check():
     return {"status": "ok"}
 
 # ============================
-# Countries Endpoint (FIXED)
-# ============================
-
-@app.get("/countries")
-def get_countries():
-    codes = (
-        risk_df["country_code"]
-        .dropna()
-        .unique()
-        .tolist()
-    )
-    codes.sort()
-
-    return {
-        "countries": [
-            {
-                "code": code,
-                "name": COUNTRY_MAP.get(code, code)
-            }
-            for code in codes
-        ]
-    }
-
-# ============================
-# Regions by Country Code
-# ============================
-
-@app.get("/countries/{country_code}/regions")
-def get_regions(country_code: str):
-
-    filtered = risk_df[
-        risk_df["country_code"].str.upper() == country_code.upper()
-    ]
-
-    if filtered.empty:
-        raise HTTPException(status_code=404, detail="Country not found")
-
-    regions = (
-        filtered[["region_id", "region_name"]]
-        .drop_duplicates()
-        .to_dict(orient="records")
-    )
-
-    return {
-        "country_code": country_code.upper(),
-        "regions": regions,
-    }
-
-# ============================
-# Risk Data Endpoint
-# ============================
-
-@app.get("/risk/{region_id}")
-def get_risk(region_id: str):
-
-    row = risk_df[risk_df["region_id"] == region_id]
-
-    if row.empty:
-        raise HTTPException(status_code=404, detail="Region not found")
-
-    row_data = row.iloc[0]
-
-    return {
-        "region_id": row_data["region_id"],
-        "region_name": row_data.get("region_name"),
-        "country_code": row_data.get("country_code"),
-        "risk_level": row_data["risk_level"],
-        "rainfall_mean_recent": row_data["rainfall_mean_recent"],
-        "rainfall_mean_normal": row_data["rainfall_mean_normal"],
-        "anomaly": row_data["anomaly"],
-        "valid_at": row_data["valid_at"],
-        "rainfall_percentile": row_data["rainfall_percentile"],
-        "data_quality": row_data["data_quality"],
-    }
-
-# ============================
-# AI Risk Explanation
-# ============================
-
-@app.get("/risk/{region_id}/explain")
-def explain_risk(region_id: str):
-
-    row = risk_df[risk_df["region_id"] == region_id]
-
-    if row.empty:
-        raise HTTPException(status_code=404, detail="Region not found")
-
-    row_data = row.iloc[0]
-    prompt = build_prompt(row_data)
-
-    try:
-        explanation = generate(prompt)
-    except Exception:
-        explanation = "Unable to generate AI explanation at the moment."
-
-    return {
-        "region_id": region_id,
-        "risk_level": row_data["risk_level"],
-        "explanation": explanation,
-    }
-
-# ============================
-# Subscription Endpoints
+# Subscription Endpoint (FIXED)
 # ============================
 
 @app.post("/subscribe")
@@ -296,7 +158,7 @@ def subscribe(data: SubscriptionRequest):
         raise HTTPException(status_code=500, detail="Database unavailable")
 
     subscription_data = {
-        "email": data.email,
+        "email": data.email.strip().lower(),
         "country": data.country,
         "region": data.region,
         "region_id": data.region_id,
@@ -311,21 +173,26 @@ def subscribe(data: SubscriptionRequest):
 
     try:
         response = (
-            supabase.table("subscribers")
-            .upsert(subscription_data, on_conflict="email")
+            supabase
+            .table("subscribers")
+            .insert(subscription_data)
             .execute()
         )
     except Exception as e:
+        if "duplicate key" in str(e).lower():
+            raise HTTPException(
+                status_code=409,
+                detail="Email already subscribed"
+            )
         raise HTTPException(status_code=500, detail=f"Database error: {e}")
 
     if data.email_delivery:
-        send_confirmation_email(data.email)
+        send_confirmation_email(subscription_data["email"])
 
     return {
         "message": "Subscription saved successfully",
         "data": response.data,
     }
-
 
 @app.delete("/unsubscribe")
 def unsubscribe(data: UnsubscribeRequest):
@@ -336,7 +203,7 @@ def unsubscribe(data: UnsubscribeRequest):
     response = (
         supabase.table("subscribers")
         .update({"alert_enabled": False})
-        .eq("email", data.email)
+        .eq("email", data.email.strip().lower())
         .execute()
     )
 
