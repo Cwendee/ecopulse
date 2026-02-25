@@ -15,17 +15,9 @@ load_dotenv()
 
 app = FastAPI()
 
-# ============================
-# Register Routers
-# ============================
-
 app.include_router(location.router)
 app.include_router(risk.router)
 app.include_router(chat.router)
-
-# ============================
-# CORS
-# ============================
 
 app.add_middleware(
     CORSMiddleware,
@@ -35,10 +27,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ============================
-# Load Risk Dataset
-# ============================
-
 BASE_DIR = Path(__file__).resolve().parents[2]
 RISK_FILE = BASE_DIR / "DataPipeline" / "data" / "processed" / "risk_africa.parquet"
 
@@ -46,10 +34,6 @@ if not RISK_FILE.exists():
     raise RuntimeError("Risk dataset not found. Ensure parquet file is generated.")
 
 risk_df = pd.read_parquet(RISK_FILE)
-
-# ============================
-# Country Mapping
-# ============================
 
 COUNTRY_MAP = {
     "AGO": "Angola", "BDI": "Burundi", "BEN": "Benin",
@@ -74,10 +58,6 @@ COUNTRY_MAP = {
     "ZAF": "South Africa", "ZMB": "Zambia", "ZWE": "Zimbabwe"
 }
 
-# ============================
-# Prompt Builder
-# ============================
-
 def build_prompt(row):
     return f"""
 You are an expert climate risk analyst.
@@ -95,13 +75,10 @@ Explain this risk clearly in simple language and give one practical recommendati
 for communities or local authorities. Keep it under 120 words.
 """
 
-# ============================
-# Email Utility
-# ============================
-
 def send_confirmation_email(to_email: str):
     api_key = os.getenv("RESEND_API_KEY")
     if not api_key:
+        print("RESEND_API_KEY not set.")
         return
 
     resend.api_key = api_key
@@ -120,10 +97,6 @@ def send_confirmation_email(to_email: str):
     except Exception as e:
         print(f"Resend error: {e}")
 
-# ============================
-# Models
-# ============================
-
 class SubscriptionRequest(BaseModel):
     email: EmailStr
     country: str
@@ -139,17 +112,9 @@ class SubscriptionRequest(BaseModel):
 class UnsubscribeRequest(BaseModel):
     email: EmailStr
 
-# ============================
-# Health
-# ============================
-
 @app.get("/health")
 def health_check():
     return {"status": "ok"}
-
-# ============================
-# Subscription Endpoint (FIXED)
-# ============================
 
 @app.post("/subscribe")
 def subscribe(data: SubscriptionRequest):
@@ -179,6 +144,7 @@ def subscribe(data: SubscriptionRequest):
             .execute()
         )
     except Exception as e:
+        # Detect duplicate email error
         if "duplicate key" in str(e).lower():
             raise HTTPException(
                 status_code=409,
@@ -187,7 +153,7 @@ def subscribe(data: SubscriptionRequest):
         raise HTTPException(status_code=500, detail=f"Database error: {e}")
 
     if data.email_delivery:
-        send_confirmation_email(subscription_data["email"])
+        send_confirmation_email(data.email)
 
     return {
         "message": "Subscription saved successfully",
