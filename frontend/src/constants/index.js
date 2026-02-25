@@ -5,6 +5,9 @@ import usersIcon from "../assets/svgIcons/users.svg";
 import localImg from "../assets/images/Local-img.jpg";
 import checklistImg from "../assets/images/Local-img.jpg";
 import communityImg from "../assets/images/Community-img.jpg";
+import Low from "../assets/svgIcons/low.svg?react";
+import Moderate from "../assets/svgIcons/moderate.svg?react";
+import High from "../assets/svgIcons/high.svg?react";
 
 export const ResourcesData = [
   {
@@ -111,7 +114,7 @@ export const headerNavigation = [
     link: routes.main.map(),
   },
   {
-    title: "Resource",
+    title: "Resources",
     link: routes.main.resources(),
   },
   {
@@ -137,3 +140,55 @@ export const aboutUs = [
     background: "bg-[#64A5CE]",
   },
 ]
+
+export const pages = {
+  home: routes.main.home(),
+  resources: routes.main.resources(),
+  about: routes.main.about(),
+  contact: routes.main.contact(),
+  faq: routes.main.faq(),
+  support: routes.main.support(),
+  emergency: routes.main.emergency(),
+  localResources: routes.main.localResources(),
+  map: routes.main.map(),
+  signup: routes.main.signup(),
+  chat: routes.main.chatbot(),
+}
+
+export const Risk = {
+  low:{
+    icon: Low,
+    title: "Low Risk - Stay Ready",
+    content: "Flooding unlikely at this time. No immediate action needed, but review your plan and stay informed.",
+    firstButton: "Enable alerts",
+    secondButton: "View resources",
+    bg: "bg-[#4CBB17]",
+    border: "border-5 border-[#4CBB17]",
+    firstLink: routes.main.signup(),
+    secondLink: routes.main.resources(),
+  },
+
+  moderate:{
+    icon: Moderate,
+    title: "Moderate Risk - Prepare Now",
+    content: "Flooding possible in low lying areas. Take precautionary steps to reduce damage and stay ready for updates",
+    firstButton: "Prepare for flooding",
+    secondButton: "View emergency preparation",
+    bg: "bg-[#FE5A1D]",
+    border: "border-5 border-[#FE5A1D]",
+    firstLink: routes.main.emergency(),
+    secondLink: routes.main.emergency(),
+  },
+
+  high:{
+    icon: High,
+    title: "High Risk - Take Action Now",
+    content: "Flooding expected in your area within 24 hours.  Take protective measures. Avoid floodwater and follow local guidance. ",
+    firstButton: "Emergency Prep",
+    secondButton: "View local resources",
+    bg: "bg-[#CE2029]",
+    border: "border-5 border-[#CE2029]",
+    firstLink: routes.main.emergency(),
+    secondLink: routes.main.localResources(),
+  }
+}
