@@ -89,18 +89,18 @@ def subscribe(data: SubscriptionRequest):
         raise HTTPException(status_code=500, detail="Database unavailable")
 
     subscription_data = {
-        "email": data.email.strip().lower(),
-        "country": data.country,
-        "region": data.region,
-        "region_id": data.region_id,
-        "severe_alerts": data.severe_alerts,
-        "early_alerts": data.early_alerts,
-        "preparedness_reminders": data.preparedness_reminders,
-        "email_delivery": data.email_delivery,
-        "in_app_delivery": data.in_app_delivery,
-        "browser_delivery": data.browser_delivery,
-        "alert_enabled": True,
-    }
+    "email": data.email.strip().lower(),
+    "country": data.country,
+    "region": data.region,
+    "region_id": data.region_id,
+    "severe_alerts": data.severe_alerts,
+    "early_alerts": data.early_alerts,
+    "preparedness_reminders": data.preparedness_reminders,
+    "email_delivery": data.email_delivery,
+    "in_app_delivery": False,   # disabled per mentor instruction
+    "browser_delivery": False,  # disabled per mentor instruction
+    "alert_enabled": True,
+}
 
     try:
         response = (
