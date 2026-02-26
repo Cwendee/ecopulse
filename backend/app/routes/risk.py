@@ -17,10 +17,27 @@ if not RISK_FILE.exists():
 risk_df = pd.read_parquet(RISK_FILE)
 
 # ============================
+# Risk Classification Criteria
+# ============================
+
+@router.get("/risk/criteria")
+def get_risk_criteria():
+    return {
+        "classification_logic": {
+            "low": "Rainfall is within or close to normal baseline levels.",
+            "moderate": "Rainfall is above normal baseline and may cause localized flooding.",
+            "high": "Rainfall significantly exceeds normal baseline and increases likelihood of flooding."
+        },
+        "data_source": "Rainfall anomaly dataset (ADM2 level)",
+        "update_frequency": "Daily aggregation",
+        "note": "Risk level is calculated using rainfall anomaly and percentile comparison against historical baseline."
+    }
+
+# ============================
 # SME Structured Messaging
 # ============================
 
-def build_structured_message(risk_level: str):
+def build_structured_message(risk_level: str, valid_at):
 
     risk = (risk_level or "").lower()
 
@@ -62,7 +79,8 @@ def build_structured_message(risk_level: str):
     return {
         "indicator": indicator,
         "title": title,
-        "explanation": explanation
+        "explanation": explanation,
+        "data_validity": f"Data valid as of {valid_at}"
     }
 
 # ======================================================
@@ -137,7 +155,10 @@ def explain_risk(region_id: str):
         raise HTTPException(status_code=404, detail="Region not found")
 
     data = row.iloc[0]
-    structured = build_structured_message(data.get("risk_level"))
+    structured = build_structured_message(
+        data.get("risk_level"),
+        data.get("valid_at")
+    )
 
     return {
         "region_id": data["region_id"],
