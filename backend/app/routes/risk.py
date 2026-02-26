@@ -120,7 +120,6 @@ def explain_risk(region_id: str):
 
 @router.get("/risk/high")
 def get_high_risk_regions():
-
     high_risk_df = risk_df[risk_df["risk_level"].str.lower() == "high"]
 
     if high_risk_df.empty:
@@ -141,3 +140,12 @@ def get_high_risk_regions():
         "count": len(regions),
         "regions": regions
     }
+
+
+# ============================
+# Get Risk by Region ID
+# ============================
+
+@router.get("/risk/{region_id}")
+def get_risk(region_id: str):
+    ...
