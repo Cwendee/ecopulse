@@ -113,3 +113,31 @@ def explain_risk(region_id: str):
         "risk_level": data.get("risk_level"),
         **structured
     }
+
+# ============================
+# Get All High Risk Regions
+# ============================
+
+@router.get("/risk/high")
+def get_high_risk_regions():
+
+    high_risk_df = risk_df[risk_df["risk_level"].str.lower() == "high"]
+
+    if high_risk_df.empty:
+        return {
+            "count": 0,
+            "regions": []
+        }
+
+    regions = high_risk_df[[
+        "region_id",
+        "region_name",
+        "country_code",
+        "risk_level",
+        "valid_at"
+    ]].to_dict(orient="records")
+
+    return {
+        "count": len(regions),
+        "regions": regions
+    }
