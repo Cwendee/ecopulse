@@ -27,41 +27,74 @@ def build_structured_message(risk_level: str):
     if risk == "low":
         indicator = "🟢"
         title = "Low Risk"
-        line1 = "Rainfall is within normal range."
-        line2 = "No immediate flood threat."
-        recommendation = "Continue normal activities and monitor updates."
+        explanation = (
+            "Rainfall is within normal range. "
+            "Flooding is unlikely at this time. "
+            "Continue normal activities and monitor updates."
+        )
 
     elif risk == "moderate":
         indicator = "🟡"
         title = "Moderate Risk"
-        line1 = "Rainfall levels are above normal."
-        line2 = "Localized flooding may occur."
-        recommendation = "Prepare drainage and monitor closely."
+        explanation = (
+            "Rainfall levels are above normal. "
+            "Localized flooding may occur in low-lying areas. "
+            "Prepare drainage systems and monitor closely."
+        )
 
     elif risk == "high":
         indicator = "🔴"
         title = "High Risk"
-        line1 = "Rainfall significantly exceeds normal levels."
-        line2 = "Flooding is likely."
-        recommendation = "Take precautionary measures immediately."
+        explanation = (
+            "Rainfall significantly exceeds normal levels. "
+            "Flooding is likely in vulnerable areas. "
+            "Take precautionary measures immediately."
+        )
 
     else:
         indicator = "⚪"
-        title = "Risk Status Unavailable"
-        line1 = "Risk data is currently unavailable."
-        line2 = ""
-        recommendation = "Please check again later."
-
-    # Small readable explanation for UI compatibility
-    explanation = f"{line1} {line2} Recommendation: {recommendation}"
+        title = "Risk Unavailable"
+        explanation = (
+            "Risk data is currently unavailable. "
+            "Please check again later."
+        )
 
     return {
         "indicator": indicator,
         "title": title,
-        "line1": line1,
-        "line2": line2,
-        "recommendation": recommendation,
         "explanation": explanation
+    }
+
+# ======================================================
+# IMPORTANT: STATIC ROUTES MUST COME BEFORE DYNAMIC ONES
+# ======================================================
+
+# ============================
+# Get All High Risk Regions
+# ============================
+
+@router.get("/risk/high")
+def get_high_risk_regions():
+
+    high_risk_df = risk_df[risk_df["risk_level"].str.lower() == "high"]
+
+    if high_risk_df.empty:
+        return {
+            "count": 0,
+            "regions": []
+        }
+
+    regions = high_risk_df[[
+        "region_id",
+        "region_name",
+        "country_code",
+        "risk_level",
+        "valid_at"
+    ]].to_dict(orient="records")
+
+    return {
+        "count": len(regions),
+        "regions": regions
     }
 
 # ============================
@@ -86,13 +119,13 @@ def get_risk(region_id: str):
         "rainfall_mean_recent": data.get("rainfall_mean_recent"),
         "rainfall_mean_normal": data.get("rainfall_mean_normal"),
         "anomaly": data.get("anomaly"),
-        "valid_at": data.get("valid_at"),
         "rainfall_percentile": data.get("rainfall_percentile"),
+        "valid_at": data.get("valid_at"),
         "data_quality": data.get("data_quality"),
     }
 
 # ============================
-# Explain Risk (Structured + Short Explanation)
+# Explain Risk (SME Friendly)
 # ============================
 
 @router.get("/risk/{region_id}/explain")
@@ -111,41 +144,6 @@ def explain_risk(region_id: str):
         "region_name": data.get("region_name"),
         "country_code": data.get("country_code"),
         "risk_level": data.get("risk_level"),
+        "valid_at": data.get("valid_at"),
         **structured
     }
-
-# ============================
-# Get All High Risk Regions
-# ============================
-
-@router.get("/risk/high")
-def get_high_risk_regions():
-    high_risk_df = risk_df[risk_df["risk_level"].str.lower() == "high"]
-
-    if high_risk_df.empty:
-        return {
-            "count": 0,
-            "regions": []
-        }
-
-    regions = high_risk_df[[
-        "region_id",
-        "region_name",
-        "country_code",
-        "risk_level",
-        "valid_at"
-    ]].to_dict(orient="records")
-
-    return {
-        "count": len(regions),
-        "regions": regions
-    }
-
-
-# ============================
-# Get Risk by Region ID
-# ============================
-
-@router.get("/risk/{region_id}")
-def get_risk(region_id: str):
-    ...
