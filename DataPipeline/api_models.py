@@ -47,8 +47,26 @@ class EcoChatRequest:
     location: RiskRecord
     user_profile: UserProfile
     user_question: str
+    local_resources: Optional[LocalResourcesResponse] = None
 
 
 @dataclass
 class EcoChatResponse:
     answer: str
+
+
+@dataclass
+class LocalResource:
+    name: str
+    phone: str
+    category: str  # e.g., "Emergency", "Red Cross", "Fire Station", "Shelter"
+    country: Optional[str] = None
+    region_id: Optional[str] = None
+    source: str = "official"  # e.g., "official", "ai_generated"
+    is_verified: bool = True
+
+
+@dataclass
+class LocalResourcesResponse:
+    emergency_contacts: list[LocalResource]
+    shelters: list[LocalResource]

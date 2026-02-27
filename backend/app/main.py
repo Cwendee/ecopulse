@@ -7,6 +7,9 @@ import pandas as pd
 import os
 import resend
 
+
+
+from DataPipeline.openrouter_client import generate
 from app.routes import location, risk, chat
 from app.services.supabase_client import supabase
 from app.services.gpt_oss_client import generate

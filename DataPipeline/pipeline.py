@@ -53,7 +53,11 @@ def run_daily_risk_pipeline(
     recent_days: int = 7,
     normal_days: int = 60,
     valid_date: Optional[str] = None,
+
     output_path: str = "DataPipeline/data/processed/risk_africa.parquet",
+
+    output_path: str = "data/processed/risk_africa.parquet",
+
 ) -> pd.DataFrame:
 
     adm2 = load_adm2_boundaries(adm2_path, region_scope="africa")
@@ -96,6 +100,7 @@ def run_daily_risk_pipeline(
     feats = build_rainfall_features(recent_df, normal_df)
     result = classify_risk(feats, valid_at=today.isoformat())
 
+
     # 🔥 Merge ADM2 metadata
     metadata = adm2[
         ["region_id", "NAME_0", "NAME_2", "shapeGroup"]
@@ -113,6 +118,17 @@ def run_daily_risk_pipeline(
 
     result.to_parquet(output_path, index=False)
 
+    # Merge metadata for backend/frontend consistency as per integration report
+    # We use adm2 columns: NAME_0 (country), NAME_2 (region_name), shapeGroup (country_code)
+    meta = adm2[["region_id", "NAME_0", "NAME_2", "shapeGroup"]].copy()
+    meta.columns = ["region_id", "country", "region_name", "country_code"]
+    result = result.merge(meta, on="region_id", how="left")
+
+
+    try:
+        result.to_parquet(output_path, index=False)
+    except Exception:
+        result.to_csv(output_path.replace(".parquet", ".csv"), index=False)
     return result
 
 
@@ -122,7 +138,11 @@ def run_daily_risk_pipeline_stac(
     recent_days: int = 7,
     normal_days: int = 60,
     valid_date: Optional[str] = None,
+
     output_path: str = "DataPipeline/data/processed/risk_africa.parquet",
+
+    output_path: str = "data/processed/risk_africa.parquet",
+
 ) -> pd.DataFrame:
 
     adm2 = load_adm2_boundaries(adm2_path, region_scope="africa")
@@ -174,6 +194,7 @@ def run_daily_risk_pipeline_stac(
     feats = build_rainfall_features(recent_df, normal_df)
     result = classify_risk(feats, valid_at=today.isoformat())
 
+
     metadata = adm2[
         ["region_id", "NAME_0", "NAME_2", "shapeGroup"]
     ].drop_duplicates()
@@ -190,7 +211,15 @@ def run_daily_risk_pipeline_stac(
 
     result.to_parquet(output_path, index=False)
 
-    return result
+    # Merge metadata for backend/frontend consistency as per integration report
+    meta = adm2[["region_id", "NAME_0", "NAME_2", "shapeGroup"]].copy()
+    meta.columns = ["region_id", "country", "region_name", "country_code"]
+    result = result.merge(meta, on="region_id", how="left")
+
+    try:
+        result.to_parquet(output_path, index=False)
+    except Exception:
+        result.to_csv(output_path.replace(".parquet", ".csv"), index=False)
 
 
 if __name__ == "__main__":
