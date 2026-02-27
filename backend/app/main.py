@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 from pathlib import Path
 import pandas as pd
 
-from DataPipeline.gpt_oss_client import generate
+from DataPipeline.openrouter_client import generate
 from app.routes import location, risk, chat
 from app.services.supabase_client import supabase
 
