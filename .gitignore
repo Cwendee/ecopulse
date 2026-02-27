@@ -3,6 +3,12 @@ backend/venv/
 datapipeline_venv/
 __pycache__/
 *.pyc
-DataPipeline/data/
+
 .env
 backend/.env
+.DS_Store
+
+# Data files
+DataPipeline/data/
+data/raw/
+data/processed/

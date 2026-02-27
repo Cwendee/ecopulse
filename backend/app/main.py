@@ -5,6 +5,9 @@ from dotenv import load_dotenv
 import os
 import resend
 
+
+
+from DataPipeline.openrouter_client import generate
 from app.routes import location, risk, chat
 from app.services.supabase_client import supabase
 
