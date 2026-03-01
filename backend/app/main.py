@@ -2,30 +2,30 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, EmailStr
 from dotenv import load_dotenv
+from pathlib import Path
+import pandas as pd
 import os
 import resend
 
-# Top-level package (sibling to backend)
-from DataPipeline.openrouter_client import generate
 from app.routes import location, risk, chat
 from app.services.supabase_client import supabase
-
-
-# Backend package imports
-from backend.app.routes import location, risk, chat
-from backend.app.services.supabase_client import supabase
 
 load_dotenv()
 
 app = FastAPI()
 
+# =========================
 # Register Routers
+# =========================
 
 app.include_router(location.router)
 app.include_router(risk.router)
 app.include_router(chat.router)
 
+# =========================
 # CORS
+# =========================
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -34,9 +34,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ============================
-# Health
-# ============================
 # =========================
 # Dataset Configuration
 # =========================
@@ -44,15 +41,11 @@ app.add_middleware(
 BASE_DIR = Path(__file__).resolve().parents[2]
 RISK_FILE = BASE_DIR / "DataPipeline" / "data" / "processed" / "risk_africa.parquet"
 
-@app.get("/health")
-def health_check():
-    return {"status": "ok"}
-
-# ============================
-# Email Confirmation
-# ============================
-
 risk_df = pd.read_parquet(RISK_FILE)
+
+# =========================
+# Country Map
+# =========================
 
 COUNTRY_MAP = {
     "AGO": "Angola", "BDI": "Burundi", "BEN": "Benin",
@@ -78,25 +71,12 @@ COUNTRY_MAP = {
 }
 
 # =========================
-# AI Prompt Builder
+# Health Check
 # =========================
 
-def build_prompt(row):
-    return f"""
-You are an expert climate risk analyst.
-
-Region ID: {row['region_id']}
-Region Name: {row.get('region_name', 'Unknown')}
-Country Code: {row.get('country_code', 'Unknown')}
-
-Recent rainfall mean: {row['rainfall_mean_recent']:.2f} mm
-Baseline rainfall mean: {row['rainfall_mean_normal']:.2f} mm
-Rainfall anomaly: {row['anomaly']:.2f} mm
-Risk level: {row['risk_level']}
-
-Explain this risk clearly in simple language and give one practical recommendation
-for communities or local authorities. Keep it under 120 words.
-"""
+@app.get("/health")
+def health_check():
+    return {"status": "ok"}
 
 # =========================
 # Email Service
@@ -123,10 +103,6 @@ def send_confirmation_email(to_email: str):
     except Exception:
         pass
 
-# ============================
-# Subscription Models
-# ============================
-
 # =========================
 # Schemas
 # =========================
@@ -143,20 +119,8 @@ class SubscriptionRequest(BaseModel):
     in_app_delivery: bool = False
     browser_delivery: bool = False
 
-
 class UnsubscribeRequest(BaseModel):
     email: EmailStr
-
-# ============================
-# Subscribe
-# ============================
-# =========================
-# Health Check
-# =========================
-
-@app.get("/health")
-def health_check():
-    return {"status": "ok"}
 
 # =========================
 # Subscription Endpoints
@@ -169,18 +133,18 @@ def subscribe(data: SubscriptionRequest):
         raise HTTPException(status_code=500, detail="Database unavailable")
 
     subscription_data = {
-    "email": data.email.strip().lower(),
-    "country": data.country,
-    "region": data.region,
-    "region_id": data.region_id,
-    "severe_alerts": data.severe_alerts,
-    "early_alerts": data.early_alerts,
-    "preparedness_reminders": data.preparedness_reminders,
-    "email_delivery": data.email_delivery,
-    "in_app_delivery": False,   # disabled per mentor instruction
-    "browser_delivery": False,  # disabled per mentor instruction
-    "alert_enabled": True,
-}
+        "email": data.email.strip().lower(),
+        "country": data.country,
+        "region": data.region,
+        "region_id": data.region_id,
+        "severe_alerts": data.severe_alerts,
+        "early_alerts": data.early_alerts,
+        "preparedness_reminders": data.preparedness_reminders,
+        "email_delivery": data.email_delivery,
+        "in_app_delivery": False,
+        "browser_delivery": False,
+        "alert_enabled": True,
+    }
 
     try:
         response = (
@@ -201,10 +165,6 @@ def subscribe(data: SubscriptionRequest):
         "message": "Subscription saved successfully",
         "data": response.data,
     }
-
-# ============================
-# Unsubscribe
-# ============================
 
 @app.delete("/unsubscribe")
 def unsubscribe(data: UnsubscribeRequest):
