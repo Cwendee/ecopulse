@@ -24,9 +24,6 @@ const Footer = () => {
                 to: routes.main.resources(),
               },
               {
-                text: "Map",
-              },
-              {
                 to: routes.main.about(),
                 text: "About Us",
               },

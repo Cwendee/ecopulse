@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { FormProvider, useForm } from "react-hook-form";
 import FormInput from "../components/ReUsables/FormInput";
 import Button from "../components/ReUsables/Button";
@@ -7,7 +7,7 @@ import { useNavigate } from "react-router-dom";
 import routes from "../constants/routes";
 import { useCountries, useRegions } from "../hooks/APIHooks";
 
-const SignUp = () => {
+const SignUp = ({ onClose, defaultEmail }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [modalType, setModalType] = useState(null);
   const navigate = useNavigate();
@@ -17,7 +17,7 @@ const SignUp = () => {
   const form = useForm({
     mode: "onChange",
     defaultValues: {
-      email: "",
+      email: defaultEmail || "",
       location: "",
       region: "",
       severe_alerts: true,
@@ -35,6 +35,22 @@ const SignUp = () => {
     handleSubmit,
     formState: { isValid },
   } = form;
+
+  useEffect(() => {
+    if (defaultEmail) {
+      reset({
+        email: defaultEmail,
+        location: "",
+        region: "",
+        severe_alerts: true,
+        early_alerts: true,
+        preparedness_reminders: false,
+        email_delivery: true,
+        in_app_delivery: false,
+        browser_delivery: false,
+      });
+    }
+  }, [defaultEmail, reset]);
   const selectedCountry = watch("country");
 
   const { data: countryData, isLoading: loadingCountries } = useCountries();
@@ -67,30 +83,38 @@ const SignUp = () => {
   };
 
   return (
-    <section className="site-container space-y-8">
+    <div className="space-y-8">
       <div className="space-y-2">
-        <h1 className="typo-4xl font-bold">Flood Alert Notifications</h1>
-        <p className="typo-2xl">
-          Sign up with your email only and receive timely flood warnings.
+        <p className="typo-2xl text-white text-start">
+          Subscribe for timely flood warnings.
         </p>
       </div>
 
       <FormProvider {...form}>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-          <FormInput
-            type="email"
-            required
-            placeholder="example@gmail.com"
-            label="Email Address"
-            name="email"
-          />
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          className="space-y-6 text-white text-start"
+        >
+          <div className="space-y-1">
+            <label className="form-label typo-2xl text-white">Email</label>{" "}
+            <input
+              type="email"
+              {...form.register("email", { required: true })}
+              required
+              placeholder="example@gmail.com"
+              label="Email Address"
+              name="email"
+              className="w-full border-[1.5px] border-white rounded-2xl h-13.5 px-4"
+            />
+          </div>
+
           <div className="space-y-8">
             <div className="space-y-1">
-              <label className="form-label typo-2xl">Country</label>
+              <label className="form-label typo-2xl text-white">Country</label>
               <select
                 value={selectedCountry}
                 {...form.register("country", { required: true })}
-                className="form-input"
+                className="form-input border-white"
               >
                 <option value="">
                   {loadingCountries ? "Loading..." : "Select Country"}
@@ -106,7 +130,7 @@ const SignUp = () => {
             <div className="space-y-1">
               <select
                 {...form.register("region_id", { required: true })}
-                className="form-input"
+                className="form-input border-white"
                 disabled={!selectedCountry}
               >
                 <option value="">
@@ -177,7 +201,7 @@ const SignUp = () => {
             </div>
           </div>
           <Button
-            className="btn btn-primary btn-md"
+            className="btn btn-accent text-white btn-md"
             type="submit"
             disabled={!isValid || isSubmitting}
           >
@@ -191,12 +215,13 @@ const SignUp = () => {
         opened={modalType === "success"}
         onClose={() => setModalType(null)}
         image={"successGif"}
+        bgColor="white"
       >
         <Button
           type="button"
           size="lg"
           className="btn btn-primary btn-md"
-          onClick={() => navigate(routes.main.home())}
+          onClick={onClose}
         >
           Continue to Home
         </Button>
@@ -206,8 +231,9 @@ const SignUp = () => {
         opened={modalType === "error"}
         onClose={() => setModalType(null)}
         image={"warningGif"}
+        bgColor="#E34234"
       >
-        <p className="text-center typo-lg">
+        <p className="text-center typo-lg text-white">
           We couldn’t process your subscription. Please try again.
         </p>
         <div className="space-x-3">
@@ -230,7 +256,7 @@ const SignUp = () => {
           </Button>
         </div>
       </Modal>
-    </section>
+    </div>
   );
 };
 

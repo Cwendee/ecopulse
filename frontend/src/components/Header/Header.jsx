@@ -6,18 +6,20 @@ import RightArrow from "../../assets/svgIcons/right-arrow.svg?react";
 import Menu from "../../assets/svgIcons/menu.svg?react";
 import Cancel from "../../assets/svgIcons/cancel.svg?react";
 import { headerNavigation } from "../../constants/index.js";
-import routes from "../../constants/routes.js";
 import clsx from "clsx";
 import { NavLink } from "react-router-dom";
+import SignUp from "../../pages/SignUp.jsx";
+import Modal from "../ReUsables/Modal.jsx";
 
 const Header = () => {
   const navigate = useNavigate();
   const [openMenu, setOpenMenu] = useState(false);
+  const [modal, setModal] = useState(false);
 
   function handleMenu() {
     setOpenMenu((o) => !o);
   }
- 
+
   return (
     <header className=" fixed top-0 left-0 right-0 z-50 bg-white">
       <div className="site-container flex items-center justify-between gap-4 lg:gap-8.75">
@@ -33,7 +35,7 @@ const Header = () => {
                 to={nav.link}
                 className={({ isActive }) =>
                   clsx(
-                    "text-[22px] md:text-[25px] xl:text-[28px] font-medium cursor-pointer hover:text-[#296083]",
+                    "text-[16px] md:text-[18px] xl:text-[24px] font-medium cursor-pointer hover:text-[#296083]",
                     isActive &&
                       "border-b-2 border-[#03A199] transition-all duration-300",
                   )
@@ -79,14 +81,14 @@ const Header = () => {
                         setOpenMenu(false);
                       }
                     }}
-                    className="text-[22px] font-medium cursor-pointer"
+                    className="text-[18px] font-medium cursor-pointer"
                   >
                     {nav.title}
                   </li>
                 ))}
               </ul>
               <Button
-                onClick={() => navigate(routes.main.subscribe())}
+                onClick={() => setModal(true)}
                 rightSection={<RightArrow />}
                 className="btn btn-primary btn-md"
               >
@@ -99,8 +101,7 @@ const Header = () => {
         <div className="header__button hidden lg:block">
           <Button
             onClick={() => {
-              navigate(routes.main.subscribe());
-              setOpenMenu(false);
+              setModal(true);
             }}
             rightSection={<RightArrow />}
             className="btn btn-primary btn-md mx-4"
@@ -109,6 +110,9 @@ const Header = () => {
           </Button>
         </div>
       </div>
+      <Modal opened={modal} onClose={() => setModal(false)}>
+        <SignUp onClose={() => setModal(false)} />
+      </Modal>
     </header>
   );
 };
