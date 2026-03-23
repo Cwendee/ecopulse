@@ -5,7 +5,7 @@ from typing import Optional, List
 import pandas as pd
 
 from api_models import EcoChatRequest, EcoChatResponse, RiskRecord, UserProfile
-from gpt_oss_client import generate
+from openrouter_client import generate
 from locations import load_adm2_boundaries
 
 
@@ -13,6 +13,10 @@ def _find_latest_risk_file(processed_dir: str = "data/processed") -> Optional[Pa
     base = Path(processed_dir)
     if not base.exists():
         return None
+    # Prioritize risk_africa.parquet as per backend integration report
+    africa_file = base / "risk_africa.parquet"
+    if africa_file.exists():
+        return africa_file
     candidates: List[Path] = sorted(base.glob("risk_adm2_*.parquet"))
     if candidates:
         return candidates[-1]
@@ -26,7 +30,7 @@ def load_risk_table(path: Optional[str] = None) -> pd.DataFrame:
     if path is None:
         f = _find_latest_risk_file()
         if f is None:
-            raise FileNotFoundError("No risk_adm2 parquet file found in data/processed")
+            raise FileNotFoundError("No risk_africa or risk_adm2 parquet file found in data/processed")
         path = str(f)
     return pd.read_parquet(path)
 
@@ -81,13 +85,18 @@ def build_eco_prompt(req: EcoChatRequest) -> str:
             "audience": req.user_profile.audience,
             "language": req.user_profile.language,
         },
+        "local_resources": {
+            "emergency_contacts": [r.__dict__ for r in req.local_resources.emergency_contacts] if req.local_resources else [],
+            "shelters": [r.__dict__ for r in req.local_resources.shelters] if req.local_resources else [],
+        },
         "user_question": req.user_question,
     }
     payload = json.dumps(obj, ensure_ascii=False)
     prompt = (
         "You are Eco, a calm and practical flood preparedness assistant for African communities.\n"
-        "You receive structured JSON with flood risk metrics and user context.\n"
+        "You receive structured JSON with flood risk metrics, local resources (contacts/shelters), and user context.\n"
         "Explain the current flood risk clearly and give concrete, local, actionable preparedness steps.\n"
+        "If local resources (contacts or shelters) are provided in the JSON, mention relevant ones if they help the user prepare or stay safe.\n"
         "Never guess the numeric risk; always respect the risk_level and data_quality fields.\n"
         "If risk_level is 'Unknown' or data_quality is 'missing', be honest about the uncertainty but still give general safety advice.\n"
         "Use simple language suitable for the specified audience. Answer in the specified language.\n\n"

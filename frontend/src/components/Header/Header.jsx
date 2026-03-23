@@ -5,11 +5,10 @@ import BrandLogo from "../BrandLogo/BrandLogo.jsx";
 import RightArrow from "../../assets/svgIcons/right-arrow.svg?react";
 import Menu from "../../assets/svgIcons/menu.svg?react";
 import Cancel from "../../assets/svgIcons/cancel.svg?react";
-import { headerNavigation } from "../../constants/index.js";
-import clsx from "clsx";
-import { NavLink } from "react-router-dom";
+import { headerNavigation, pages } from "../../constants/index.js";
 import SignUp from "../../pages/SignUp.jsx";
 import Modal from "../ReUsables/Modal.jsx";
+
 
 const Header = () => {
   const navigate = useNavigate();
@@ -53,61 +52,32 @@ const Header = () => {
           onClick={handleMenu}
         />
 
-        <div
-          onClick={() => setOpenMenu(false)}
-          className={`fixed inset-0 bg-black/40 transition-opacity z-40 lg:hidden ${
-            openMenu ? "opacity-100" : "opacity-0 pointer-events-none"
-          }`}
-        >
-          <aside
-            onClick={(e) => e.stopPropagation()}
-            className={`fixed top-0 right-0 h-screen w-64 bg-[#03A199] shadow-lg transform transition-transform text-white lg:hidden ${
-              openMenu ? "translate-x-0" : "translate-x-full"
-            }`}
-          >
-            <div className="p-4 flex justify-between items-center border-b border-b-white ">
-              <span className="font-semibold text-white">Menu</span>
-              <Cancel className="size-5" onClick={() => setOpenMenu(false)} />
-            </div>
+        <div className={`fixed inset-0 bg-black/40 transition-opacity z-5  md:hidden ${ openMenu ? "opacity-100" : "opacity-0 pointer-events-none"}`} onClick={() => setOpenMenu(false)}  >
+          <aside  className={`fixed top-o right-0 h-screen w-64 bg-[#03A199] shadow-lg transform transition-transform text-white md:hidden ${openMenu ? "translate-x-0" : "tanslate-x-full" } `} >
+              <div className="p-4 flex justify-between items-center border-b border-b-white ">
+                <span className="font-semibold text-white">Menu</span>
+                <Cancel className="size-5" onClick={() => setOpenMenu(false)} />
+              </div>
 
-            <div>
-              <ul className="px-4 pb-4 flex flex-col gap-3">
-                {headerNavigation.map((nav, index) => (
-                  <li
-                    key={index}
-                    onClick={() => {
-                      if (nav.link) {
-                        navigate(nav.link);
-                        setOpenMenu(false);
-                      }
-                    }}
-                    className="text-[18px] font-medium cursor-pointer"
-                  >
-                    {nav.title}
-                  </li>
-                ))}
-              </ul>
-              <Button
-                onClick={() => setModal(true)}
-                rightSection={<RightArrow />}
-                className="btn btn-primary btn-md"
-              >
-                Receive Flood Alerts
-              </Button>
-            </div>
+              <div>
+                <ul className="px-4 pb-4 flex flex-col gap-3">
+                  {
+                    headerNavigation.map((nav, index) => <li 
+                    key={index} 
+                    onClick={() => nav.link && navigate(nav.link)}
+                    className="text-[22px] font-medium">
+                      {nav.title}
+                    </li>)
+                  }
+                </ul>
+                <Button children={"Receive Flood Alerts"} rightSection={<RightArrow/>} className="btn btn-primary btn-md mx-4" onClick={() => pages.signup && navigate(pages.signup)} />
+              </div>
           </aside>
+
         </div>
 
-        <div className="header__button hidden lg:block">
-          <Button
-            onClick={() => {
-              setModal(true);
-            }}
-            rightSection={<RightArrow />}
-            className="btn btn-primary btn-md mx-4"
-          >
-            Receive Flood Alerts
-          </Button>
+        <div className="header__button hidden md:block">
+          <Button children={"Receive Flood Alerts"} rightSection={<RightArrow/>} className="btn btn-primary btn-md" onClick={() => pages.signup && navigate(pages.signup)} />
         </div>
       </div>
       <Modal opened={modal} onClose={() => setModal(false)}>

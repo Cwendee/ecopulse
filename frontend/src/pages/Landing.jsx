@@ -83,6 +83,9 @@ const Landing = () => {
             riskData={riskQuery.data ? [riskQuery.data] : []}
             selectedCountry={selectedCountry}
             aiQuery={aiQuery}
+
+          <input type="email" placeholder="Enter your email to receive early flood warnings" className="w-full bg-white rounded-[20px] py-1.75 px-5 " /> <br />
+          <Button children={"Receive emergency flood alerts"} rightSection={<RightArrow />} className="btn btn-primary btn-md" onClick={() => pages.signup && navigate(pages.signup)} />
           />
         </div>
         <div className="col-span-1 bg-[#CDD8DFE5] py-5 px-2 lg:px-4 space-y-6">
@@ -148,10 +151,9 @@ const Landing = () => {
                 ))}
               </select>
 
-              <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none">
-                <HiChevronDown className="h-5 w-5 text-gray-500" />
-              </div>
-            </div>
+          <div className="flex gap-5 " >
+            <Button children={"Check Flood Risk"} className="btn btn-primary btn-lg " />
+            <Button children={"View Full Map"} rightSection={<RightArrow />} className="btn btn-md btn-accent " onClick={() => pages.map && navigate(pages.map)} />
 
             <div className="flex justify-center items-center">
               <Button
@@ -333,7 +335,7 @@ const Landing = () => {
           </div>
         </div>
         <div className="flex justify-center mx-auto py-8">
-          <Button className="btn btn-primary btn-md">Start chat</Button>
+          <Button className="btn btn-primary btn-md" onClick={() => pages.chat && navigate(pages.chat)}>Start chat</Button>
         </div>
       </section> */}
       <Modal opened={openSignupModal} onClose={() => setOpenSignupModal(false)}>

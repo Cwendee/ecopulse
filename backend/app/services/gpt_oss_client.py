@@ -22,23 +22,30 @@ def default_config() -> GPTOSSConfig:
 
 def generate(prompt: str, config: Optional[GPTOSSConfig] = None) -> str:
     cfg = config or default_config()
+
     url = cfg.base_url.rstrip("/") + "/chat/completions"
+
     headers: Dict[str, str] = {"Content-Type": "application/json"}
     if cfg.api_key:
         headers["Authorization"] = f"Bearer {cfg.api_key}"
+
     payload: Dict[str, Any] = {
         "model": cfg.model,
         "messages": [
-            {"role": "system", "content": "You are a precise classification and matching assistant."},
+            {"role": "system", "content": "You are an expert climate risk analyst. You interpret rainfall anomalies and risk classifications, providing clear explanations and practical guidance for communities and local authorities."},
             {"role": "user", "content": prompt},
         ],
         "temperature": 0,
     }
+
     resp = requests.post(url, json=payload, headers=headers, timeout=cfg.timeout)
     resp.raise_for_status()
+
     data = resp.json()
+
     try:
         content = data["choices"][0]["message"]["content"]
     except Exception:
         raise RuntimeError("Unexpected response format from gpt-oss service")
+
     return content

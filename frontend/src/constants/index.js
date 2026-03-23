@@ -5,6 +5,9 @@ import usersIcon from "../assets/svgIcons/users.svg";
 import localImg from "../assets/images/Local-img.jpg";
 import checklistImg from "../assets/images/Local-img.jpg";
 import communityImg from "../assets/images/Community-img.jpg";
+import Low from "../assets/svgIcons/low.svg?react";
+import Moderate from "../assets/svgIcons/moderate.svg?react";
+import High from "../assets/svgIcons/high.svg?react";
 
 export const ResourcesData = [
   {
