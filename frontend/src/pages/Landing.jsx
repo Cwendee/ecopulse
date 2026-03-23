@@ -1,32 +1,34 @@
-import { ResourcesData } from "../constants";
 import { useNavigate } from "react-router-dom";
-import { pages } from "../constants/index";
-import polygon from "../assets/svgIcons/polygon.svg";
 import Button from "../components/ReUsables/Button";
-import HeroS from "../assets/images/Hero-s.png";
-import HeroM from "../assets/images/Hero-m.png";
-import HeroL from "../assets/images/Hero-l.png";
 import RightArrow from "../assets/svgIcons/right-arrow.svg?react";
 import { useState } from "react";
 import { useCountries, useFloodAnalysis, useRegions } from "../hooks/APIHooks";
-import Modal from "../components/ReUsables/Modal";
-import ButtonLoader from "../components/ReUsables/ButtonLoader";
 import routes from "../constants/routes";
 import { HiChevronDown } from "react-icons/hi";
-import lowIcon from "../assets/svgIcons/status-low-icon.png"
+import lowIcon from "../assets/svgIcons/status-low-icon.png";
 import moderateIcon from "../assets/svgIcons/status-moderate-icon.svg";
 import highIcon from "../assets/svgIcons/status-high-icon.svg";
+import { LuCloudHail } from "react-icons/lu";
+import Map from "./Map";
+import Modal from "../components/ReUsables/Modal";
+import SignUp from "./SignUp";
+import Loader from "../components/ReUsables/Loader";
 
 const Landing = () => {
   const navigate = useNavigate();
   const [selectedCountry, setSelectedCountry] = useState("");
   const [selectedRegionId, setSelectedRegionId] = useState("");
   const [isSearching, setIsSearching] = useState(false);
-  const [showModal, setShowModal] = useState(false);
+  const [email, setEmail] = useState("");
+  const [openSignupModal, setOpenSignupModal] = useState(false);
+  const [isOpeningModal, setIsOpeningModal] = useState(false);
 
   const { data: countryData } = useCountries();
   const { data: regionData } = useRegions(selectedCountry);
-  const { riskQuery, aiQuery } = useFloodAnalysis(selectedRegionId, showModal);
+  const { riskQuery, aiQuery } = useFloodAnalysis(
+    selectedRegionId,
+    isSearching,
+  );
 
   const getRiskStyles = (level) => {
     switch (level?.toLowerCase()) {
@@ -56,7 +58,7 @@ const Landing = () => {
           border: "border-gray-300",
           bg: "bg-gray-50",
           text: "text-gray-600",
-          icon: "ℹ️",
+          icon: "ℹ",
         };
     }
   };
@@ -65,51 +67,46 @@ const Landing = () => {
 
   const handleSearch = () => {
     if (selectedRegionId) {
-      setShowModal(true);
+      setIsSearching(true);
     }
   };
 
   return (
-    <section className="site-container">
-      <section className="hero my-4">
-        <div className="bg-[#008B8B] border border-[#008B8B] rounded-lg flex flex-col justify-center items-center md:px-3 md:pt-4 pb-4">
-          <div className="relative h-55 pb-6 flex flex-col justify-center items-center md:h-auto">
-            <picture className="w-full rounded-lg">
-              <source media="(min-width: 1024px)" srcSet={HeroL} />
-              <source media="(min-width: 768px)" srcSet={HeroM} />
-              <img src={HeroS} alt="flooded area with a water over road sign" />
-            </picture>
-            <h1 className="text-[#F8F8FF] typo-4xl text-center font-medium py-6 absolute top-0 bg-[#008B8B]/20 h-full md:relative md:h-auto">
-              {" "}
-              FLOOD ALERTS AND PREPAREDNESS YOU CAN TRUST ACROSS AFRICA{" "}
-            </h1>
-          </div>
-<<<<<<< HEAD
-
-          <input type="email" placeholder="Enter your email to receive early flood warnings" className="w-full bg-white rounded-[20px] py-1.75 px-5 " /> <br />
-          <Button children={"Receive emergency flood alerts"} rightSection={<RightArrow />} className="btn btn-primary btn-md" onClick={() => pages.signup && navigate(pages.signup)} />
-=======
-          <input
-            type="email"
-            placeholder="Enter your email to receive early flood warnings"
-            className="w-full bg-white rounded-[20px] py-1.75 px-5 "
-          />{" "}
-          <br />
-          <Button
-            children={"Receive emergency flood alerts"}
-            rightSection={<RightArrow />}
-            className="btn btn-primary btn-md"
+    <section className="">
+      <section className="grid grid-cols-1 md:grid-cols-3">
+        <div className="col-span-1 md:col-span-2 flex-1 relative z-0 h-125 md:h-full">
+          <Map
+            riskData={riskQuery.data ? [riskQuery.data] : []}
+            selectedCountry={selectedCountry}
+            aiQuery={aiQuery}
           />
->>>>>>> main
         </div>
-      </section>
+        <div className="col-span-1 bg-[#CDD8DFE5] py-5 px-2 lg:px-4 space-y-6">
+          <h1 className="typo-2xl text-[#F8F8FF]">FLOOD RISK MAP</h1>
 
-      <section className="flood-risk-section bg-[#C6E2E8] rounded-xl mt-20 mb-12">
-        <div className=" flex flex-col justify-center items-center gap-6 section ">
-          <h2 className="typo-3xl mb-2 text-center ">
-            Check for flood risk in your area
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-6">
+          <div className="bg-[#F8F8FFCC] rounded-xl p-3 space-y-3">
+            <h4 className="text-xl font-medium">Map Key</h4>
+            <div className="grid grid-cols-3 gap-2">
+              {[
+                { title: "High", backgroundColor: "#CE2029" },
+                { title: "Moderate", backgroundColor: "#FE5A1D" },
+                { title: "Low", backgroundColor: "#4CBB17" },
+              ].map((item) => (
+                <div
+                  className="flex flex-col xl:flex-row gap-1 lg:gap-3 items-center"
+                  key={item.title}
+                >
+                  <div
+                    className="w-8 h-8 rounded-full"
+                    style={{ backgroundColor: item.backgroundColor }}
+                  />
+                  <p className="typo-base">{item.title}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <section className="flood-risk-section bg-[#F8F8FFE5] rounded-xl p-4 space-y-6">
             <div className="relative w-full">
               <select
                 value={selectedCountry}
@@ -117,7 +114,7 @@ const Landing = () => {
                   setSelectedCountry(e.target.value);
                   setIsSearching(false);
                 }}
-                className="form-input peer focus:outline-none transition-all appearance-none pr-10 cursor-pointer"
+                className="form-input peer focus:outline-none transition-all appearance-none pr-10 cursor-pointer w-full"
               >
                 <option value="" disabled hidden>
                   Select Country
@@ -132,6 +129,7 @@ const Landing = () => {
                 <HiChevronDown className="h-5 w-5 text-gray-500" />
               </div>
             </div>
+
             <div className="relative w-full">
               <select
                 value={selectedRegionId}
@@ -148,169 +146,160 @@ const Landing = () => {
                   </option>
                 ))}
               </select>
-
-<<<<<<< HEAD
-          <div className="flex gap-5 " >
-            <Button children={"Check Flood Risk"} className="btn btn-primary btn-lg " />
-            <Button children={"View Full Map"} rightSection={<RightArrow />} className="btn btn-md btn-accent " onClick={() => pages.map && navigate(pages.map)} />
-=======
               <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none">
                 <HiChevronDown className="h-5 w-5 text-gray-500" />
               </div>
             </div>
->>>>>>> main
+
+            <div className="flex justify-center ">
+              <Button
+                onClick={handleSearch}
+                disabled={!selectedRegionId || isProcessing}
+                className="btn btn-primary btn-md"
+              >
+                Check Flood Risk
+              </Button>
+            </div>
+          </section>
+
+          <div className="flex items-center gap-2">
+            <LuCloudHail />
+            <h4 className="text-sm">
+              Flood risk is updated daily based on rainfall over the last 7
+              days.
+            </h4>
           </div>
 
-          {/* <Button
-            children={"Use My Current Location"}
-            rightSection={<LocationPointer />}
-            className="btn btn-md btn-accent "
-          /> */}
-
-          <div className="flex gap-3 md:gap-5 ">
-            <Button
-              onClick={handleSearch}
-              disabled={!selectedRegionId}
-              className="btn btn-primary btn-md"
-            >
-              Check Flood Risk
-            </Button>
-
-            <Button
-              onClick={() => navigate(routes.main.map())}
-              children={"View Full Map"}
-              rightSection={<RightArrow />}
-              className="btn btn-md btn-accent "
-            />
-          </div>
-        </div>
-      </section>
-
-      <section className="space-y-9.5 section">
-        <h2 className="typo-3xl text-center">Find Resources</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12 xl:gap-20">
-          {ResourcesData.map((item, index) => (
-            <div
-              key={index}
-              className="card hover-lift"
-              onClick={() => item.link && navigate(item.link)}
-            >
-              <div className="bg-[#03A199] py-px px-0.75 rounded-xl h-8.25 w-9.25 flex justify-center items-center">
-                <img src={item.icon} />
+          <div className="mt-4">
+            {isProcessing ? (
+              <div className="bg-white rounded-xl p-6 shadow-sm text-center space-y-4">
+                <div className="flex justify-center">
+                  <div className="animate-spin rounded-full h-10 w-10 border-4 border-[#63B7B9] border-t-transparent"></div>
+                </div>
+                <p className="text-gray-700 font-medium">
+                  Analyzing recent rainfall and flood risk...
+                </p>
+                <p className="text-sm text-gray-500">
+                  This usually takes just a few seconds
+                </p>
               </div>
-              <h1 className="typo-xl">{item.title}</h1>
-              <p className="typo-base">{item.description}</p>
-            </div>
-          ))}
-        </div>{" "}
-      </section>
-      <section className="py-6">
-        <div className="relative">
-          <div className="bg-[#008B8B] rounded-[18px] py-8 px-5 text-white space-y-2 md:space-y-3">
-            <h1 className="typo-2xl">Need more guidance?</h1>
-            <p className="typo-lg">
-              Chat with Eco, the friendly chatbot for instant help with
-              preparation, safety, and recovery.
-            </p>
-          </div>
-
-          <div className="absolute -bottom-6 right-6 ">
-            <img
-              src={polygon}
-              alt="polygon shape"
-              className="w-18 h-16 md:w-29.75 md:h-26"
-            />
-          </div>
-        </div>
-        <div className="flex justify-center mx-auto py-8">
-          <Button className="btn btn-primary btn-md" onClick={() => pages.chat && navigate(pages.chat)}>Start chat</Button>
-        </div>
-      </section>
-      <Modal
-        opened={showModal}
-        onClose={() => setShowModal(false)}
-        title="EcoPulse Flood Analysis Report"
-      >
-        <div className="flex flex-col justify-center p-2">
-          {isProcessing && (
-            <div className="flex flex-col items-center justify-center py-16 animate-pulse">
-              <ButtonLoader message="EcoPulse AI is calculating risk factors..." />
-            </div>
-          )}
-
-          {(riskQuery.isError || aiQuery.isError) && !isProcessing && (
-            <div className="flex flex-col justify-center space-y-4 text-center animate-in fade-in zoom-in duration-300">
-              <div className="bg-[#F8F8FF] p-4 rounded-xl border-4px border-[#296083]">
-                <h4 className="typo-2xl">Region Not Supported Yet</h4>
-                <h3 className="typo-lg">
-                  Flood risk data not available for this area right now. Explore
-                  nearby regions for flood-risk updates.
-                </h3>
-                <Button
-                  onClick={() => navigate(routes.main.map())}
-                  className="btn btn-primary btn-md "
-                  rightSection={<RightArrow />}
+            ) : riskQuery.isError || aiQuery.isError ? (
+              <div className="bg-[#F8F8FF] p-4 rounded-xl border border-[#296083] text-center space-y-3">
+                <h4 className="typo-lg font-semibold">
+                  Region Not Supported Yet
+                </h4>
+                <p className="typo-sm">
+                  Flood risk data not available for this area right now.
+                </p>
+                <div className="flex justify-center gap-3">
+                  <Button className="btn btn-accent btn-sm">
+                    View Guidance
+                  </Button>
+                </div>
+              </div>
+            ) : riskQuery.data ? (
+              <div className="rounded-xl bg-white p-6 shadow-sm text-center space-y-5">
+                <div
+                  className={`flex items-center justify-center space-x-3 rounded-xl p-3 border ${getRiskStyles(riskQuery.data.risk_level).border} ${getRiskStyles(riskQuery.data.risk_level).bg}`}
                 >
-                  Open map
-                </Button>
-                <p className="typo-lg">
-                  Or view general preparedness guidance and emergency steps.
-                </p>{" "}
-                <Button
-                  className="btn btn-accent btn-md"
-                  rightSection={<RightArrow />}
-                >
-                  View guidance steps
-                </Button>
-              </div>{" "}
-            </div>
-          )}
-
-          {!isProcessing &&
-            riskQuery.data &&
-            (() => {
-              const risk = riskQuery.data.risk_level;
-              const styles = getRiskStyles(risk);
-
-              return (
-                <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                  <img
+                    src={getRiskStyles(riskQuery.data.risk_level).icon}
+                    alt={`${riskQuery.data.risk_level} risk icon`}
+                    className="w-8 h-8 object-contain"
+                  />
                   <div
-                    className={`p-3 md:p-6 rounded-xl border-[3px] ${styles.border} ${styles.bg} text-center mb-8 transition-all duration-300`}
+                    className={`typo-xl font-bold ${getRiskStyles(riskQuery.data.risk_level).text}`}
                   >
-                    <div className="flex justify-center mx-auto">
-                      <img src={styles.icon} alt={`${styles.text} risk icon`} />
-                    </div>
-
-                    <h3 className="typo-xl">Flood Risk Level</h3>
-                    <span className={`typo-3xl font-bold ${styles.text}`}>
-                      {risk} Risk
-                    </span>
-                    <div className="">
-                      <div className="typo-base">
-                        {aiQuery.data?.explanation
-                          ? aiQuery.data.explanation
-                          : "No detailed AI analysis was provided for this specific region."}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex justify-center items-center space-x-5 mx-auto">
-                    <Button
-                      onClick={() => navigate(routes.main.emergency())}
-                      className="btn btn-primary btn-md shadow-lg shadow-[#008B8B]/20"
-                    >
-                      Emergency Prep
-                    </Button>
-                    <Button
-                      onClick={() => navigate(routes.main.resources())}
-                      className="btn btn-accent btn-md shadow-lg shadow-[#008B8B]/20"
-                    >
-                      View Resources
-                    </Button>
+                    {riskQuery.data.risk_level} Risk
                   </div>
                 </div>
-              );
-            })()}
+
+                <p className="text-sm text-gray-700 leading-relaxed">
+                  {aiQuery.data?.explanation ||
+                    "Rainfall and flood indicators have been analyzed for this area."}
+                </p>
+
+                <div>
+                  <h1 className="text-sm font-medium text-[#9A9493]">
+                    Updated {aiQuery.data?.valid_at || "recently"}
+                  </h1>
+                </div>
+              </div>
+            ) : (
+              <div className="bg-white rounded-xl p-6 shadow-sm text-center space-y-4 opacity-80">
+                <div className="flex justify-center items-center">
+                  <LuCloudHail size={40} />
+                </div>
+                <h4 className="font-medium text-gray-700">
+                  Select a region to check flood risk
+                </h4>
+                <p className="text-sm text-gray-500">
+                  Choose a country and region above, then click "Check Flood
+                  Risk" to see the latest analysis.
+                </p>
+              </div>
+            )}
+          </div>
+
+          <div className="flex flex-col justify-center gap-4">
+            <Button
+              onClick={() => navigate(routes.main.resources())}
+              className="btn btn-primary btn-md"
+              rightSection={<RightArrow />}
+            >
+              Local Resources
+            </Button>
+            <Button
+              onClick={() => navigate(routes.main.emergency())}
+              className="btn btn-accent btn-md"
+              rightSection={<RightArrow />}
+            >
+              Emergency Prep
+            </Button>
+          </div>
         </div>
+      </section>
+
+      {/* Newsletter / Alerts banner */}
+      <section className="bg-[#63B7B9] py-12">
+        <div className="site-container flex flex-col justify-center items-center gap-6 mx-auto px-4">
+          <h1 className="text-[#F8F8FF] typo-2xl text-center">
+            FLOOD ALERTS AND PREPAREDNESS YOU CAN TRUST ACROSS AFRICA
+          </h1>
+
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="Enter your email to receive early flood warnings"
+            className="w-full text-sm bg-white rounded-[20px] py-3 px-5"
+            disabled={isOpeningModal}
+          />
+
+          <Button
+            onClick={() => {
+              if (!email) return;
+              setIsOpeningModal(true);
+              setOpenSignupModal(true);
+              setTimeout(() => setIsOpeningModal(false), 800);
+            }}
+            rightSection={<RightArrow />}
+            className="btn btn-primary btn-md"
+          >
+            Receive emergency flood alerts
+          </Button>
+        </div>
+      </section>
+
+      <Modal opened={openSignupModal} onClose={() => setOpenSignupModal(false)}>
+        {isOpeningModal ? (
+          <Loader />
+        ) : (
+          <SignUp
+            onClose={() => setOpenSignupModal(false)}
+            defaultEmail={email}
+          />
+        )}
       </Modal>
     </section>
   );
