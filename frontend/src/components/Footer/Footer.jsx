@@ -11,7 +11,14 @@ const Footer = () => {
           <img src={brandLogo} alt="Bramd Logo" className="w-12 h-12" />
           <h1 className="typo-xl">EcoPulse</h1>
         </div> */}
-        <BrandLogo />
+        <div className="space-y-1">
+          <BrandLogo />
+          <p className="max-w-xl typo-lg w-full">
+            Eco Pulse is a platform to help communities in Africa receive timely
+            flood alerts and remain prepared for flooding emergencies.
+          </p>
+        </div>
+
         <div className="grid grid-cols-2 gap-10.75 justify-between mt-4 md:mt-0">
           <div>
             {[
@@ -44,8 +51,8 @@ const Footer = () => {
                 to: routes.main.contact(),
               },
               {
-                text: "FAQs",
-                to: routes.main.faq(),
+                text: "Support",
+                to: routes.main.support(),
               },
             ].map((l, i) => (
               <Link
